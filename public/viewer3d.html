@@ -1,0 +1,123 @@
+<title>Krossover 3D Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root{--bg:#eef2f8;--surface:#fff;--panel:#f6f9fd;--ink:#0f2748;--ink-soft:#3f5570;--muted:#7688a0;--border:#dce4ef;--border-strong:#c3d0e2;--accent:#2f6fed;--accent-ink:#fff;--radius:10px;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a1320;--surface:#111d2e;--panel:#0e1927;--ink:#e8eef8;--ink-soft:#b2c2d8;--muted:#7e92ac;--border:#213349;--border-strong:#2d445f;--accent:#4d8bf0;--accent-ink:#0a1320;color-scheme:dark;}}
+:root[data-theme="dark"]{--bg:#0a1320;--surface:#111d2e;--panel:#0e1927;--ink:#e8eef8;--ink-soft:#b2c2d8;--muted:#7e92ac;--border:#213349;--border-strong:#2d445f;--accent:#4d8bf0;--accent-ink:#0a1320;color-scheme:dark;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;line-height:1.5}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px;max-width:1120px;margin:0 auto}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.logo{width:30px;height:30px;border-radius:7px;background:var(--ink);color:var(--surface);display:flex;align-items:center;justify-content:center;font-weight:700}
+.top b{font-size:16px}.top span{font-size:12px;color:var(--muted);display:block}
+.work{display:grid;grid-template-columns:1fr 280px;gap:12px;align-items:start}
+@media(max-width:860px){.work{grid-template-columns:1fr}}
+.stage{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:relative}
+#cv{display:block;width:100%;height:520px;touch-action:none;cursor:grab}
+#cv:active{cursor:grabbing}
+.hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--muted);background:color-mix(in srgb,var(--surface) 80%,transparent);padding:4px 9px;border-radius:7px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px}
+.panel h3{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+button{font-family:inherit;font-size:13px;font-weight:500;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--surface);color:var(--ink);padding:8px 12px;cursor:pointer;flex:1}
+button.on,button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:4px}
+input[type=color]{width:100%;height:34px;border:1px solid var(--border-strong);border-radius:7px;background:var(--panel);padding:2px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.swrow{display:flex;gap:6px;flex-wrap:wrap}
+.sw{width:28px;height:28px;border-radius:50%;border:1px solid var(--border-strong);cursor:pointer}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);margin:8px 0}
+.note{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5}
+.up{display:block;text-align:center;border:1px dashed var(--border-strong);border-radius:8px;padding:10px;font-size:12.5px;color:var(--ink-soft);cursor:pointer}
+</style>
+
+<div class="wrap">
+  <div class="top"><div class="logo">K</div><div><b>Krossover 3D Preview</b><span>Live artwork on a rotatable product · drag to spin</span></div></div>
+  <div class="work">
+    <div class="stage"><canvas id="cv"></canvas><div class="hint">Drag to rotate · scroll to zoom</div></div>
+    <div class="panel">
+      <h3>Product</h3>
+      <div class="seg"><button data-p="bottle" class="on">Bottle</button><button data-p="tumbler">Tumbler</button><button data-p="mug">Mug</button></div>
+      <div class="field"><label>Product color</label><div class="swrow" id="pcolors"></div></div>
+      <h3 style="margin-top:14px">Artwork</h3>
+      <label class="up" id="upwrap">⬆ Upload wrap artwork (PNG/JPG)</label>
+      <div class="field" style="margin-top:10px"><label>Or sample text</label><input type="text" id="txt" value="KROSSOVER" style="width:100%;font:inherit;padding:7px 9px;border-radius:7px;border:1px solid var(--border-strong);background:var(--panel);color:var(--ink)"></div>
+      <div class="field"><label>Band height <span id="bhv" style="color:var(--muted)">40%</span></label><input type="range" id="bh" min="15" max="80" value="40"></div>
+      <div class="field"><label>Band position <span id="bpv" style="color:var(--muted)">center</span></label><input type="range" id="bp" min="10" max="80" value="48"></div>
+      <label class="chk"><input type="checkbox" id="spin" checked> Auto-rotate</label>
+      <div class="note">Procedural 3D (works with no model file). In production, load a per-product GLB and map this same wrap texture onto its body — the viewer code supports both.</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const PCOLORS=["#3f4a2e","#13233f","#ffffff","#8a1c1c","#c86a1c","#1d1d1d","#d9c7a3","#6d4ab7"];
+const state={product:"bottle",color:"#3f4a2e",text:"KROSSOVER",art:null,bandH:0.40,bandPos:0.48,spin:true};
+let renderer,scene,camera,group,texture,rot={x:-0.15,y:0.5},drag=false,last=null,dist=3.4;
+
+function buildTexture(){
+  const W=1024,H=1024,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  x.fillStyle=state.color;x.fillRect(0,0,W,H);
+  // subtle vertical shading for realism
+  const g=x.createLinearGradient(0,0,W,0);g.addColorStop(0,"rgba(0,0,0,.18)");g.addColorStop(.5,"rgba(255,255,255,.06)");g.addColorStop(1,"rgba(0,0,0,.18)");x.fillStyle=g;x.fillRect(0,0,W,H);
+  const bandH=H*state.bandH, bandY=H*state.bandPos-bandH/2;
+  if(state.art){x.drawImage(state.art,0,bandY,W,bandH);}
+  else{x.fillStyle="#ffffff";x.textAlign="center";x.textBaseline="middle";x.font=`700 ${Math.round(bandH*0.5)}px Poppins,Inter,sans-serif`;
+    // repeat text around so every side shows it
+    for(let k=0;k<3;k++)x.fillText(state.text||"",W*(k+0.5)/3,bandY+bandH/2);}
+  const t=new THREE.CanvasTexture(c);t.anisotropy=8;t.needsUpdate=true;return t;
+}
+function makeProduct(){
+  if(group)scene.remove(group);
+  group=new THREE.Group();
+  texture=buildTexture();
+  const mat=new THREE.MeshStandardMaterial({map:texture,roughness:0.35,metalness:0.25});
+  let body;
+  if(state.product==="mug"){
+    body=new THREE.Mesh(new THREE.CylinderGeometry(0.62,0.62,1.5,64,1,false),mat);
+    const handle=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.1,20,40),new THREE.MeshStandardMaterial({color:state.color,roughness:0.4,metalness:0.2}));
+    handle.position.set(0.72,0,0);handle.rotation.y=Math.PI/2;group.add(handle);
+  } else if(state.product==="tumbler"){
+    body=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.68,2.0,64,1,false),mat);
+    const lid=new THREE.Mesh(new THREE.CylinderGeometry(0.52,0.52,0.18,48),new THREE.MeshStandardMaterial({color:"#1c1c1c",roughness:0.5}));lid.position.y=1.09;group.add(lid);
+  } else {
+    body=new THREE.Mesh(new THREE.CylinderGeometry(0.56,0.6,2.0,64,1,false),mat);
+    const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.34,0.5,0.4,48),new THREE.MeshStandardMaterial({color:state.color,roughness:0.35,metalness:0.25}));neck.position.y=1.15;group.add(neck);
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(0.36,0.36,0.3,48),new THREE.MeshStandardMaterial({color:state.color,roughness:0.4}));cap.position.y=1.48;group.add(cap);
+    const loop=new THREE.Mesh(new THREE.TorusGeometry(0.22,0.055,16,40),new THREE.MeshStandardMaterial({color:state.color,roughness:0.4}));loop.position.y=1.78;loop.rotation.x=Math.PI/2;group.add(loop);
+  }
+  group.add(body);scene.add(group);
+}
+function init(){
+  const cv=$("cv");renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  resize();scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(35,cv.clientWidth/cv.clientHeight,0.1,100);
+  scene.add(new THREE.AmbientLight(0xffffff,0.75));
+  const d1=new THREE.DirectionalLight(0xffffff,0.9);d1.position.set(3,5,4);scene.add(d1);
+  const d2=new THREE.DirectionalLight(0xffffff,0.35);d2.position.set(-4,2,-3);scene.add(d2);
+  makeProduct();animate();
+  cv.addEventListener("pointerdown",e=>{drag=true;last={x:e.clientX,y:e.clientY};});
+  window.addEventListener("pointerup",()=>drag=false);
+  window.addEventListener("pointermove",e=>{if(!drag||!last)return;rot.y+=(e.clientX-last.x)*0.01;rot.x+=(e.clientY-last.y)*0.01;rot.x=Math.max(-1,Math.min(1,rot.x));last={x:e.clientX,y:e.clientY};});
+  cv.addEventListener("wheel",e=>{e.preventDefault();dist=Math.max(2.2,Math.min(6,dist+e.deltaY*0.002));},{passive:false});
+  window.addEventListener("resize",resize);
+}
+function resize(){const cv=$("cv");const w=cv.clientWidth,h=cv.clientHeight;renderer.setPixelRatio(Math.min(2,devicePixelRatio));renderer.setSize(w,h,false);if(camera){camera.aspect=w/h;camera.updateProjectionMatrix();}}
+function animate(){requestAnimationFrame(animate);if(state.spin&&!drag)rot.y+=0.005;if(group){group.rotation.y=rot.y;group.rotation.x=rot.x;}camera.position.set(0,0,dist);camera.lookAt(0,0,0);renderer.render(scene,camera);}
+function refresh(){makeProduct();}
+
+function boot(){
+  const pc=$("pcolors");PCOLORS.forEach(c=>{const s=document.createElement("div");s.className="sw";s.style.background=c;s.onclick=()=>{state.color=c;refresh();};pc.appendChild(s);});
+  document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-p]").forEach(x=>x.classList.remove("on"));b.classList.add("on");state.product=b.dataset.p;refresh();});
+  $("txt").oninput=e=>{state.text=e.target.value;state.art=null;refresh();};
+  $("bh").oninput=e=>{state.bandH=+e.target.value/100;$("bhv").textContent=e.target.value+"%";refresh();};
+  $("bp").oninput=e=>{state.bandPos=+e.target.value/100;$("bpv").textContent=e.target.value<40?"low":e.target.value>56?"high":"center";refresh();};
+  $("spin").onchange=e=>state.spin=e.target.checked;
+  $("upwrap").onclick=()=>{const f=document.createElement("input");f.type="file";f.accept="image/*";f.onchange=ev=>{const file=ev.target.files[0];if(!file)return;const r=new FileReader();r.onload=x=>{const im=new Image();im.onload=()=>{state.art=im;refresh();};im.src=x.target.result;};r.readAsDataURL(file);};f.click();};
+  init();
+}
+if(window.THREE)boot();else window.addEventListener("load",boot);
+</script>

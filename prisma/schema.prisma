@@ -1,0 +1,61 @@
+// Krossover Studio — data model. Postgres (Neon/Supabase/RDS) via Prisma.
+// JSON columns keep views/elements flexible; the TS types in src/lib/types.ts
+// describe their shape.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Product {
+  id        String   @id
+  sku       String   @unique
+  name      String
+  type      String   // flat | cylindrical
+  material  String
+  methods   Json     // ProductMethodConfig[]
+  views     Json     // ProductView[]
+  pricing   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  designs   Design[]
+}
+
+model Design {
+  id            String   @id @default(cuid())
+  product       Product  @relation(fields: [productId], references: [id])
+  productId     String
+  print         Json     // { methodId, spots? }
+  commercials   Json     // { qty, productBase, perElement, cardPrice, vatPct, delivery }
+  perView       Json     // [{ viewId, areaId, elements[] }]
+  card          Json?    // MessageCard | null
+  price         Json     // OrderTotals (server-computed)
+  previewRef    String?
+  printFileRefs Json?
+  createdAt     DateTime @default(now())
+  orders        Order[]
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  design    Design   @relation(fields: [designId], references: [id])
+  designId  String
+  qty       Int
+  totals    Json
+  status    String   @default("new") // new | in_production | shipped
+  createdAt DateTime @default(now())
+}
+
+model Asset {
+  id        String   @id @default(cuid())
+  url       String
+  kind      String   // upload | print | mockup | separation
+  width     Int?
+  height    Int?
+  meta      Json?
+  createdAt DateTime @default(now())
+}

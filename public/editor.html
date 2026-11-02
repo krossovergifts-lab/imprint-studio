@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Krossover Studio MVP</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: top bar · view tabs · 3-col workspace · status bar (live price). White-navy, theme-aware. */
+:root{
+  --bg:#eef2f8; --surface:#ffffff; --panel:#f6f9fd; --ink:#0f2748; --ink-soft:#3f5570;
+  --muted:#7688a0; --border:#dce4ef; --border-strong:#c3d0e2;
+  --accent:#2f6fed; --accent-ink:#ffffff; --boundary:#e24b4a;
+  --ok:#1a9b73; --warn:#c67d10; --danger:#d84a48;
+  --radius:9px; --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace; --ui:"Inter",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a1320; --surface:#111d2e; --panel:#0e1927; --ink:#e8eef8; --ink-soft:#b2c2d8;
+  --muted:#7e92ac; --border:#213349; --border-strong:#2d445f;
+  --accent:#4d8bf0; --accent-ink:#0a1320; --boundary:#ff5d5a; --ok:#3cce9f; --warn:#e0a53f; --danger:#ff6b68; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0a1320; --surface:#111d2e; --panel:#0e1927; --ink:#e8eef8; --ink-soft:#b2c2d8;
+  --muted:#7e92ac; --border:#213349; --border-strong:#2d445f;
+  --accent:#4d8bf0; --accent-ink:#0a1320; --boundary:#ff5d5a; --ok:#3cce9f; --warn:#e0a53f; --danger:#ff6b68; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--ui);margin:0;line-height:1.5}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px;max-width:1240px;margin:0 auto}
+h1,h2,h3{margin:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{width:30px;height:30px;border-radius:7px;background:var(--ink);color:var(--surface);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:0 0 auto}
+.brand b{font-size:16px;font-weight:600}.brand span{font-size:12px;color:var(--muted);display:block}
+.pill{font-size:12px;font-weight:600;padding:5px 11px;border-radius:100px;border:1px solid var(--border-strong);color:var(--ink-soft);background:var(--surface)}
+.pill.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button,.btn{font-family:inherit;font-size:13px;font-weight:500;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--surface);color:var(--ink);padding:8px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:.12s}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button:active{transform:scale(.98)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.06);color:var(--accent-ink)}
+button.ghost{background:transparent}
+button:disabled{opacity:.42;cursor:not-allowed;transform:none}
+button:disabled:hover{border-color:var(--border-strong);color:var(--ink)}
+.work{display:grid;grid-template-columns:62px 1fr 310px;gap:12px;align-items:start}
+@media(max-width:920px){.work{grid-template-columns:1fr}}
+.rail{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 6px;display:flex;flex-direction:column;gap:6px;align-items:center}
+@media(max-width:920px){.rail{flex-direction:row;flex-wrap:wrap;justify-content:center;padding:8px}}
+.tool{width:46px;height:46px;border-radius:10px;border:1px solid transparent;background:var(--panel);color:var(--ink-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font-size:9px;font-weight:500}
+.tool:hover{border-color:var(--accent);color:var(--accent)}
+.tool svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.6}
+.tool:disabled{opacity:.35;cursor:not-allowed}.tool:disabled:hover{border-color:transparent;color:var(--ink-soft)}
+.stagewrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;min-width:0}
+.tabs{display:flex;gap:6px;margin-bottom:11px;flex-wrap:wrap}
+.tab{font-size:12.5px;padding:6px 12px;border-radius:8px;border:1px solid var(--border-strong);background:var(--panel);cursor:pointer;color:var(--ink-soft);display:inline-flex;align-items:center;gap:6px}
+.tab.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tab.add{border-style:dashed;color:var(--muted)}
+.stage{display:flex;align-items:center;justify-content:center;background:var(--panel);border-radius:10px;overflow:auto}
+.caption{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
+.canvas-shell{line-height:0}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;min-width:0}
+.panel h3{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:10px}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:4px}
+input[type=text],input[type=number],select{width:100%;font-family:inherit;font-size:13px;padding:7px 9px;border-radius:7px;border:1px solid var(--border-strong);background:var(--panel);color:var(--ink)}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=color]{width:100%;height:34px;padding:2px;border:1px solid var(--border-strong);border-radius:7px;background:var(--panel)}
+.check{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);margin:4px 0}
+.check input{width:16px;height:16px;accent-color:var(--accent)}
+.swatches{display:flex;gap:6px;flex-wrap:wrap}
+.sw{width:26px;height:26px;border-radius:50%;border:1px solid var(--border-strong);cursor:pointer}
+.hint{font-size:12px;color:var(--muted);line-height:1.6}
+.statusbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:9px 14px;font-size:12.5px}
+.stat{display:inline-flex;align-items:center;gap:6px;color:var(--ink-soft)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.off{background:var(--muted)}
+.tag{font-weight:600}.tag.ok{color:var(--ok)}.tag.warn{color:var(--warn)}
+.price{font-weight:700;color:var(--ink);font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}.seg button{flex:1}
+.divider{height:1px;background:var(--border);margin:13px 0}
+.mrow{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--border-strong);border-radius:9px;padding:8px 10px;margin-bottom:7px;cursor:pointer;background:var(--panel)}
+.mrow.on{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent)}
+.mrow b{font-size:12.5px;display:block}.mrow small{font-size:11px;color:var(--muted)}
+.mrow .mp{font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chip{font-size:11.5px;padding:5px 10px;border-radius:7px;border:1px solid var(--border-strong);background:var(--panel);cursor:pointer}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+dialog{border:none;border-radius:16px;padding:0;max-width:min(680px,94vw);background:var(--surface);color:var(--ink);box-shadow:0 24px 60px rgba(8,18,34,.34)}
+dialog::backdrop{background:rgba(8,18,34,.5)}
+.modal{padding:18px;max-height:86vh;overflow:auto}
+.modal h2{font-size:17px;font-weight:600;margin-bottom:4px}
+.modal p{font-size:13px;color:var(--muted);margin:0 0 14px}
+.outview{border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px}
+.outview h4{margin:0 0 8px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}}
+.checker{background-image:linear-gradient(45deg,#c9d3e0 25%,transparent 25%),linear-gradient(-45deg,#c9d3e0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#c9d3e0 75%),linear-gradient(-45deg,transparent 75%,#c9d3e0 75%);background-size:14px 14px;background-position:0 0,0 7px,7px -7px,-7px 0;border-radius:8px;padding:8px;display:flex;justify-content:center;align-items:center}
+.checker img{max-width:100%;max-height:170px}
+.minlbl{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;text-align:center}
+.pricebox{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:11px 12px;margin-top:10px}
+.pricebox .l{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-soft);margin:2px 0}
+.pricebox .t{display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:11px;border-radius:8px;border:1px solid var(--border-strong);background:var(--panel);color:var(--ink);padding:9px;resize:vertical}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.note{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.55}
+.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent)}
+.filechip{display:none}
+.typecard{border:1px solid var(--border-strong);border-radius:10px;padding:11px;cursor:pointer;text-align:left;width:100%;background:var(--panel);margin-bottom:8px}
+.typecard:hover{border-color:var(--accent)}.typecard b{font-size:13px;display:block}.typecard small{font-size:11.5px;color:var(--muted)}
+.uprow{display:flex;gap:6px;margin-bottom:7px}.uprow>button{flex:1;font-size:12px;padding:7px 6px}
+.uprow>button.set{border-color:var(--ok);color:var(--ok)}
+</style>
+
+
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><a id="backLink" href="/manager" class="ghost" style="display:none;text-decoration:none;padding:7px 10px;border-radius:8px;border:1px solid var(--border-strong);color:var(--ink);font-size:13px">← Products</a><div class="logo">K</div><div><b id="hTitle">Krossover Studio</b><span id="hSub">Personalization engine · MVP prototype</span></div></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="pill on" id="modePill">Choose a product type</span></div>
+    <div class="actions">
+      <button id="btnTheme" class="ghost" aria-label="Toggle theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      <button id="btnReset" class="ghost">Reset</button>
+      <button id="btnSaveSetup" class="primary" style="display:none">Save customization setup</button>
+      <button id="btnExport" class="primary" disabled>Review & add to cart</button>
+    </div>
+  </div>
+
+  <div class="work">
+    <div class="rail" id="rail">
+      <button class="tool" id="tText" disabled><svg viewBox="0 0 24 24"><path d="M4 6h16M12 6v13M8 19h8"/></svg>Text</button>
+      <button class="tool" id="tImage" disabled><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg>Image</button>
+      <button class="tool" id="tRect" disabled><svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1.5"/></svg>Box</button>
+      <button class="tool" id="tCircle" disabled><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>Circle</button>
+      <button class="tool" id="tTri" disabled><svg viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/></svg>Triangle</button>
+      <button class="tool" id="tSquare" disabled><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1.5"/></svg>Square</button>
+      <button class="tool" id="tDup" disabled><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4h12"/></svg>Copy</button>
+      <button class="tool" id="tFront" disabled><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Front</button>
+      <button class="tool" id="tDel" disabled><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Delete</button>
+    </div>
+    <div class="stagewrap">
+      <div class="tabs" id="tabs"></div>
+      <div class="stage" id="stage"><div class="canvas-shell"><canvas id="c"></canvas></div></div>
+      <div class="caption" id="caption">Pick a product type to start.</div>
+    </div>
+    <div class="panel" id="inspector"></div>
+  </div>
+
+  <div class="statusbar">
+    <span class="stat"><span class="dot off" id="dFit"></span><span id="sFit">No print area</span></span>
+    <span class="stat"><span id="sDim">—</span></span>
+    <span class="stat"><span id="sPrice" class="price">—</span></span>
+  </div>
+</div>
+
+<input type="file" id="fileProduct" accept="image/*" class="filechip">
+<input type="file" id="fileArt" accept="image/*" class="filechip">
+
+<dialog id="outDlg"><div class="modal">
+  <h2>Review & add to cart</h2>
+  <p>Each print file is rendered at full resolution with the chosen print method's effect applied — only the artwork inside the boundary, on transparent. Cylindrical products show the wrap across front / left / right.</p>
+  <div id="outGallery"></div>
+  <div class="pricebox" id="outPrice"></div>
+  <label style="font-size:12px;color:var(--ink-soft);font-weight:600;margin-top:12px;display:block">Cart payload</label>
+  <textarea id="outJson" readonly></textarea>
+  <div class="note">In the live site this payload plus the customization price is added to the cart line, and the render service outputs real PNG + print PDF for the chosen method. Downloads are disabled in this preview sandbox.</div>
+  <div id="quoteBox"></div>
+  <div id="mockupBox" hidden style="margin-top:12px">
+    <label style="font-size:12px;color:var(--ink-soft);font-weight:600">AI lifestyle-mockup prompt</label>
+    <textarea id="mockupPrompt" readonly></textarea>
+    <div class="note">No AI endpoint connected in this preview, so here's the prompt — paste into Nano Banana / Gemini / GPT-Image and attach the print file. In the deployed app the mockup renders here automatically.</div>
+  </div>
+  <div class="modal-actions"><button id="btnMockup">✨ Generate AI mockup</button><button id="btnCopy">Copy payload</button><button class="primary" id="btnCloseOut">Add to cart</button></div>
+</div></dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&family=Montserrat:wght@500;700&family=Playfair+Display:wght@500;600;700&family=Lora:wght@500;600&family=Oswald:wght@500;600&family=Bebas+Neue&family=Dancing+Script:wght@600;700&family=Pacifico&family=Great+Vibes&family=Roboto:wght@400;500;700&family=Lobster&family=Cairo:wght@600;700&family=Amiri:wght@400;700&display=swap">
+<script>
+/* ===== Printing methods + pricing engine (mirrors the repo's TypeScript engine) ===== */
+const CUR="AED";
+const CARD_PRICE=4;
+/* Print options. limit: 1/2 = spot color count, 0 = full color, mono effect also 1. img: image upload allowed. */
+const METHODS=[
+ {id:"screen1",group:"Screen Printing",label:"1 color",limit:1,img:true,effect:"ink",price:{setup:25,perUnit:3}},
+ {id:"screen2",group:"Screen Printing",label:"2 color",limit:2,img:true,effect:"ink",price:{setup:40,perUnit:5}},
+ {id:"screenfull",group:"Screen Printing",label:"Full color",limit:0,img:true,effect:"ink",price:{setup:60,perUnit:9}},
+ {id:"uvdtf",group:"UV DTF Sticker",label:"Full color",limit:0,img:true,effect:"uv",price:{perUnit:5,perCm2:0.06}},
+ {id:"uv",group:"UV Printing",label:"Full color",limit:0,img:true,effect:"uv",price:{perUnit:6,perCm2:0.07}},
+ {id:"dtf",group:"Heat Transfer (DTF)",label:"Full color · cloth",limit:0,img:true,effect:"uv",price:{perUnit:5,perCm2:0.05}},
+ {id:"engrave",group:"Engraving",label:"Mono engrave",limit:1,img:true,effect:"engrave",price:{setup:15,perUnit:4,perCm2:0.09}},
+];
+const MATERIALS=["cotton","ceramic","metal","wood","crystal","leather","paper"];
+const methodById=id=>METHODS.find(m=>m.id===id);
+const optLimit=()=>{const m=methodById(state.method);return m?m.limit:0;};
+function areaCm2(v){return (v.realW/10)*(v.realH/10);}
+function perItemPrint(m,v){const p=m.price;let u=p.perUnit||0;if(p.perCm2)u+=p.perCm2*areaCm2(v);return u;}
+function elementCount(){let n=0;state.views.forEach(v=>{if(V()&&v===V())return;n+=(v.design||[]).length;});if(V()&&V().area&&canvas)n+=designObjs().length;return n;}
+function orderPrice(){const v=V();if(!v||!v.area)return null;const m=methodById(state.method)||METHODS[0];const p=m.price;const r=n=>Math.round(n*100)/100;
+  const nEl=elementCount(),elementsUnit=(state.perElement||0)*nEl;
+  const unit=r(perItemPrint(m,v)+elementsUnit),setup=p.setup||0,cardUnit=state.card.enabled?CARD_PRICE:0,qty=Math.max(1,state.qty);
+  const printTotal=r(setup+(unit+cardUnit)*qty),productTotal=r(state.productBase*qty),sub=r(productTotal+printTotal),vat=r(sub*state.vatPct/100),delivery=state.delivery||0,grand=r(sub+vat+delivery);
+  return {unit,setup:r(setup),cardUnit,nEl,elementsUnit:r(elementsUnit),printPerItem:r(unit+cardUnit+setup/qty),printTotal,productTotal,sub,vat,delivery:r(delivery),grand,qty};
+}
+
+const BOUNDARY="#e24b4a", SAFE="rgba(120,136,160,.85)";
+const FONTS=["Poppins","Montserrat","Inter","Roboto","Playfair Display","Lora","Oswald","Bebas Neue","Dancing Script","Great Vibes","Pacifico","Lobster","Cairo","Amiri"];
+const SW=["#0f2748","#2f6fed","#e24b4a","#1a9b73","#c67d10","#8b5cf6","#ffffff","#111111"];
+const SAMPLES={
+ mug:`<svg xmlns="http://www.w3.org/2000/svg" width="420" height="360"><rect width="420" height="360" fill="#fff"/><rect x="96" y="70" width="190" height="220" rx="20" fill="#f3f5f8" stroke="#cdd6e2" stroke-width="3"/><path d="M286 120 q70 0 70 60 t-70 60" fill="none" stroke="#cdd6e2" stroke-width="18"/><ellipse cx="191" cy="70" rx="95" ry="20" fill="#e9edf3" stroke="#cdd6e2" stroke-width="3"/></svg>`,
+ bottle:`<svg xmlns="http://www.w3.org/2000/svg" width="320" height="430"><rect width="320" height="430" fill="#fff"/><rect x="132" y="20" width="56" height="40" rx="8" fill="#e9edf3" stroke="#cdd6e2" stroke-width="3"/><path d="M118 62 h84 v42 q20 14 20 56 v206 q0 22 -22 22 h-80 q-22 0 -22 -22 v-206 q0 -42 20 -56 z" fill="#f3f5f8" stroke="#cdd6e2" stroke-width="3"/></svg>`,
+ tote:`<svg xmlns="http://www.w3.org/2000/svg" width="420" height="380"><rect width="420" height="380" fill="#fff"/><rect x="110" y="110" width="200" height="230" rx="8" fill="#efe7d6" stroke="#d6c9ad" stroke-width="3"/><path d="M150 110 q0 -60 30 -60 M270 110 q0 -60 -30 -60" fill="none" stroke="#d6c9ad" stroke-width="10"/></svg>`,
+ tee:`<svg xmlns="http://www.w3.org/2000/svg" width="440" height="380"><rect width="440" height="380" fill="#fff"/><path d="M150 70 l-70 40 -30 -20 -40 55 60 45 20 -15 v150 h180 v-150 l20 15 60 -45 -40 -55 -30 20 -70 -40 q-20 30 -50 30 t-50 -30z" transform="translate(40,10)" fill="#f3f5f8" stroke="#cdd6e2" stroke-width="3"/></svg>`,
+ crystal:`<svg xmlns="http://www.w3.org/2000/svg" width="380" height="400"><rect width="380" height="400" fill="#fff"/><rect x="110" y="70" width="160" height="260" rx="10" fill="#eaf2f8" stroke="#bcd3e4" stroke-width="3"/><rect x="128" y="90" width="124" height="220" rx="6" fill="#f4fafd" stroke="#d4e6f1" stroke-width="2"/></svg>`
+};
+const sampleURL=k=>"data:image/svg+xml;utf8,"+encodeURIComponent(SAMPLES[k]);
+
+const DEF={realW:80,realH:90,dpi:300,safe:4};
+const state={productType:null,material:"ceramic",methodsAvail:["screen1","screen2","screenfull","uvdtf","uv","dtf","engrave"],method:"uvdtf",spots:["#0f2748","#2f6fed"],qty:1,productBase:20,vatPct:5,delivery:0,perElement:2,card:{enabled:false,text:"",font:"Poppins",color:"#0f2748",w:148,h:105},colorErr:"",views:[],vi:0,mode:"idle",bgRemove:true,adminSku:null};
+let canvas,boundaryObj=null,safeObj=null,productObj=null;
+const $=id=>document.getElementById(id);
+const mm2px=(mm,dpi)=>Math.round(mm/25.4*dpi);
+const V=()=>state.views[state.vi];
+const clampNum=(v,min,max,def)=>{v=parseFloat(v);if(isNaN(v))return def;return Math.min(max,Math.max(min,v));};
+
+function initCanvas(){
+  const stage=$("stage");const w=Math.max(280,Math.min(820,stage.clientWidth-2));const h=Math.round(w*0.64);
+  canvas=new fabric.Canvas("c",{width:w,height:h,enableRetinaScaling:false,preserveObjectStacking:true});
+  canvas.on("selection:created",refreshInspector);canvas.on("selection:updated",refreshInspector);
+  canvas.on("selection:cleared",refreshInspector);canvas.on("object:modified",updateStatus);
+}
+function keepGuidesOnTop(){if(safeObj)safeObj.bringToFront();if(boundaryObj)boundaryObj.bringToFront();canvas.requestRenderAll();}
+function designObjs(){return canvas.getObjects().filter(o=>o.koRole==="design");}
+function clipRectFrom(a){return new fabric.Rect({left:a.left,top:a.top,width:a.width,height:a.height,absolutePositioned:true});}
+
+/* ---- white background removal (near-white -> transparent) ---- */
+function removeWhiteBg(url){return new Promise(res=>{const im=new Image();im.onload=()=>{
+  const c=document.createElement("canvas");c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext("2d");x.drawImage(im,0,0);
+  const d=x.getImageData(0,0,c.width,c.height),p=d.data;
+  for(let i=0;i<p.length;i+=4){if(p[i]>238&&p[i+1]>238&&p[i+2]>238)p[i+3]=0;else if(p[i]>225&&p[i+1]>225&&p[i+2]>225)p[i+3]=Math.min(p[i+3],90);}
+  x.putImageData(d,0,0);res(c.toDataURL());};im.onerror=()=>res(url);im.src=url;});}
+
+/* ---- product type + views ---- */
+function chooseType(t){
+  state.productType=t;
+  if(t==="cylinder"){state.views=[{label:"360° Wrap",type:"cylinder",src:null,leftSrc:null,rightSrc:null,area:null,design:[],productH:200,dia:50,printH:80,...DEF,realW:157,realH:80}];}
+  else{state.views=[{label:"Front",type:"flat",src:null,area:null,design:[],...DEF}];}
+  state.vi=0;rebuildCanvas();
+}
+function addBackView(){const f=state.views[0];state.views.push({label:"Back",type:"flat",src:f.src,area:null,design:[],...DEF});persistView();state.vi=state.views.length-1;rebuildCanvas();}
+function removeView(i){if(state.views.length<=1)return;state.views.splice(i,1);if(state.vi>=state.views.length)state.vi=state.views.length-1;rebuildCanvas();}
+function persistView(){const v=V();if(v&&v.area)v.design=designObjs().map(o=>o.toObject(["koRole"]));}
+function switchView(i){persistView();state.vi=i;rebuildCanvas();}
+
+function loadImg(url){return new Promise(r=>fabric.Image.fromURL(url,img=>r(img)));}
+function loadHTMLImg(url){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=url;});}
+async function buildCylRow(v){
+  const srcs=[v.leftSrc,v.src,v.rightSrc].filter(Boolean);
+  const imgs=await Promise.all(srcs.map(loadImg));
+  const targetH=canvas.height*0.92;
+  const ppm=v.productH?targetH/v.productH:0; const gap=ppm?Math.max(1,2*ppm):5; // ~2mm between side images
+  const widths=imgs.map(im=>im.width*(targetH/im.height));
+  const total=widths.reduce((a,b)=>a+b,0)+gap*(imgs.length-1);
+  const fit=total>canvas.width-6?(canvas.width-6)/total:1;
+  const h=targetH*fit, top=(canvas.height-h)/2; const x0=(canvas.width-total*fit)/2; let x=x0;
+  imgs.forEach(im=>{const s=(targetH/im.height)*fit;im.set({selectable:false,evented:false,scaleX:s,scaleY:s,left:x,top:top});im.koRole="product";canvas.add(im);im.sendToBack();x+=im.width*s+gap*fit;});
+  state.cylPack={x0:x0,x1:x0+total*fit,top:top,imgH:h,n:imgs.length};
+}
+function rebuildCanvas(){
+  if(!canvas)return;canvas.clear();boundaryObj=safeObj=productObj=null;
+  const v=V();const finish=()=>finalizeView(v);
+  if(v&&v.type==="cylinder"&&v.src){buildCylRow(v).then(finish);}
+  else if(v&&v.src){loadImg(v.src).then(img=>{
+    const pad=24,aw=canvas.width-pad*2,ah=canvas.height-pad*2,s=Math.min(aw/img.width,ah/img.height);
+    img.set({selectable:false,evented:false,scaleX:s,scaleY:s});
+    img.set({left:(canvas.width-img.getScaledWidth())/2,top:(canvas.height-img.getScaledHeight())/2});
+    img.koRole="product";productObj=img;canvas.add(img);img.sendToBack();finish();});}
+  else finish();
+}
+function finalizeView(v){
+  if(v&&v.area){
+    boundaryObj=new fabric.Rect({left:v.area.left,top:v.area.top,width:v.area.width,height:v.area.height,fill:"rgba(226,75,74,.05)",stroke:BOUNDARY,strokeWidth:1.6,strokeDashArray:[7,5],strokeUniform:true,selectable:false,evented:false,rx:2,ry:2});boundaryObj.koRole="boundary";canvas.add(boundaryObj);
+    const mpp=v.realW/v.area.width,safePx=v.safe/mpp;
+    safeObj=new fabric.Rect({left:v.area.left+safePx,top:v.area.top+safePx,width:v.area.width-safePx*2,height:v.area.height-safePx*2,fill:"",stroke:SAFE,strokeWidth:1,strokeDashArray:[3,4],selectable:false,evented:false,strokeUniform:true});safeObj.koRole="safe";canvas.add(safeObj);
+    fabric.util.enlivenObjects((v.design||[]),objs=>{objs.forEach(o=>{o.koRole="design";o.clipPath=clipRectFrom(v.area);canvas.add(o);});keepGuidesOnTop();updateStatus();});
+    state.mode="design";
+  } else if(v&&v.src){
+    if(v.type==="cylinder"&&state.cylPack){
+      const pk=state.cylPack,bw=pk.x1-pk.x0,bh=v.productH?pk.imgH*(v.printH/v.productH):pk.imgH*0.4,bt=pk.top+pk.imgH*0.55-bh/2;
+      boundaryObj=new fabric.Rect({left:pk.x0,top:bt,width:bw,height:bh,fill:"rgba(226,75,74,.12)",stroke:BOUNDARY,strokeWidth:1.6,strokeDashArray:[7,5],strokeUniform:true,lockScalingX:true,lockScalingY:true,lockRotation:true,lockMovementX:true,borderColor:BOUNDARY,cornerColor:BOUNDARY,rx:2,ry:2});
+      boundaryObj.setControlsVisibility({mt:false,mb:false,ml:false,mr:false,tl:false,tr:false,bl:false,br:false,mtr:false});
+    } else {
+      const w=canvas.width*0.34,h=w*(v.realH/v.realW);
+      boundaryObj=new fabric.Rect({left:(canvas.width-w)/2,top:(canvas.height-h)/2,width:w,height:h,fill:"rgba(226,75,74,.06)",stroke:BOUNDARY,strokeWidth:1.6,strokeDashArray:[7,5],strokeUniform:true,cornerColor:BOUNDARY,cornerStyle:"circle",transparentCorners:false,borderColor:BOUNDARY,rx:2,ry:2});
+    }
+    boundaryObj.koRole="boundary";canvas.add(boundaryObj);canvas.setActiveObject(boundaryObj);
+    state.mode="setup";
+  } else {state.mode=v?"product":"idle";}
+  canvas.requestRenderAll();renderTabs();setMode();updateStatus();updateCaption();
+}
+
+/* ---- tabs ---- */
+function renderTabs(){
+  const t=$("tabs");t.innerHTML="";if(!state.productType){t.style.display="none";return;}t.style.display="flex";
+  state.views.forEach((v,i)=>{const b=document.createElement("button");b.className="tab"+(i===state.vi?" on":"");
+    b.innerHTML=v.label+(v.area?"":' <span style="opacity:.6">·setup</span>')+(state.views.length>1?' <span class="xv" data-x="'+i+'">×</span>':"");
+    b.onclick=e=>{if(e.target.dataset.x!=null){removeView(+e.target.dataset.x);return;}switchView(i);};t.appendChild(b);});
+  if(state.productType==="flat"&&state.views.length<2){const a=document.createElement("button");a.className="tab add";a.textContent="+ Add back";a.onclick=addBackView;t.appendChild(a);}
+}
+
+/* ---- product load ---- */
+async function setProductImage(url,slot){
+  const out=await prepImage(url);const v=V();
+  if(slot==="left")v.leftSrc=out; else if(slot==="right")v.rightSrc=out; else v.src=out;
+  rebuildCanvas();
+}
+function lockArea(){
+  const v=V();if(!boundaryObj)return;
+  v.dpi=clampNum($("inDpi").value,72,600,v.dpi);v.safe=clampNum($("inSafe").value,0,50,v.safe);
+  if(v.type==="cylinder"){
+    v.productH=clampNum($("inPH").value,10,2000,v.productH);
+    v.dia=clampNum($("inDia").value,5,500,v.dia);
+    v.printH=clampNum($("inLH").value,5,v.productH,v.printH);
+    v.realW=Math.round(Math.PI*v.dia);v.realH=v.printH;
+    const pk=state.cylPack,bw=pk?pk.x1-pk.x0:boundaryObj.width,bh=pk?pk.imgH*(v.printH/v.productH):boundaryObj.height;
+    v.area={left:pk?pk.x0:boundaryObj.left,top:boundaryObj.top,width:bw,height:bh};
+  } else {
+    v.realW=clampNum($("inW").value,5,1000,v.realW);v.realH=clampNum($("inH").value,5,1000,v.realH);
+    const w=boundaryObj.width*boundaryObj.scaleX,h=w*(v.realH/v.realW);
+    v.area={left:boundaryObj.left,top:boundaryObj.top,width:w,height:h};
+  }
+  rebuildCanvas();
+}
+
+/* ---- design ops ---- */
+function center(){const a=V().area;return{left:a.left+a.width/2,top:a.top+a.height/2};}
+function defaultFill(){return optLimit()>0?(state.spots[0]||"#0f2748"):"#2f6fed";}
+function addText(){const a=V().area,c=center();const t=new fabric.IText("Your text",{left:c.left,top:c.top,originX:"center",originY:"center",fontFamily:"Poppins",fontSize:Math.max(14,a.width*0.13),fill:defaultFill(),textAlign:"center",clipPath:clipRectFrom(a)});t.koRole="design";canvas.add(t);canvas.setActiveObject(t);keepGuidesOnTop();refreshInspector();}
+function addShape(kind){const a=V().area,c=center(),s=a.width*0.32;let o;
+  if(kind==="circle")o=new fabric.Circle({radius:s/2});
+  else if(kind==="triangle")o=new fabric.Triangle({width:s,height:s});
+  else if(kind==="square")o=new fabric.Rect({width:s,height:s,rx:4,ry:4});
+  else o=new fabric.Rect({width:s,height:s*0.68,rx:6,ry:6});
+  o.set({fill:defaultFill(),left:c.left,top:c.top,originX:"center",originY:"center",clipPath:clipRectFrom(a)});o.koRole="design";canvas.add(o);canvas.setActiveObject(o);keepGuidesOnTop();refreshInspector();}
+function addImage(file){const m=methodById(state.method),a=V().area,r=new FileReader();
+  r.onload=e=>{const probe=new Image();probe.onload=()=>{
+    if(m&&m.limit>0&&m.effect==="ink"){const cc=countColors(probe);if(cc>m.limit){state.colorErr=`This logo has about ${cc} colors, but ${m.group} ${m.label} prints only ${m.limit}. Choose Full color, or upload a ${m.limit}-color logo.`;refreshInspector();return;}}
+    state.colorErr="";removeWhiteBg(e.target.result).then(url=>fabric.Image.fromURL(url,img=>{const c=center(),s=(a.width*0.6)/img.width;img.set({left:c.left,top:c.top,originX:"center",originY:"center",scaleX:s,scaleY:s,clipPath:clipRectFrom(a)});img.koRole="design";canvas.add(img);canvas.setActiveObject(img);keepGuidesOnTop();updateStatus();refreshInspector();}));
+  };probe.src=e.target.result;};r.readAsDataURL(file);}
+function countColors(img){const n=48,c=document.createElement("canvas");c.width=n;c.height=n;const x=c.getContext("2d");x.drawImage(img,0,0,n,n);let d;try{d=x.getImageData(0,0,n,n).data;}catch(e){return 99;}const counts={};let tot=0;for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;tot++;const k=(d[i]>>5)+","+(d[i+1]>>5)+","+(d[i+2]>>5);counts[k]=(counts[k]||0)+1;}if(!tot)return 0;return Object.values(counts).filter(c=>c>tot*0.02).length;}
+
+/* ---- status + price ---- */
+function currentPrice(){return orderPrice();}
+function updateStatus(){
+  const v=V();
+  if(v&&v.area){$("dFit").className="dot ok";$("sFit").innerHTML='<span class="tag ok">Artwork fits print area</span>';
+    $("sDim").textContent=`${v.realW} × ${v.realH} mm · ${v.dpi} DPI · ${mm2px(v.realW,v.dpi)}×${mm2px(v.realH,v.dpi)} px`;
+    const pr=orderPrice();$("sPrice").textContent=pr?`Cart total: ${CUR} ${pr.grand.toFixed(2)}`:"—";
+  } else {$("dFit").className="dot off";$("sFit").textContent="No print area";$("sDim").textContent="—";$("sPrice").textContent="—";}
+}
+function updateCaption(){const c=$("caption");if(!state.productType){c.textContent="Pick a product type to start.";return;}
+  if(state.mode==="design"){c.textContent=V().type==="cylinder"?"Design the flat 360° wrap. On review you'll see it curved across front / left / right.":"Design inside the red boundary. Anything crossing it is clipped — that's your clipping mask preview on the product.";return;}
+  c.textContent=V()&&V().src?"Drag the red dashed box over the printable zone, size it, then lock it.":"Upload product image(s) for this view.";}
+function setMode(){const design=state.mode==="design";["tText","tImage","tRect","tCircle","tTri","tSquare","tDup","tFront","tDel"].forEach(id=>$(id).disabled=!design);
+  $("btnExport").disabled=!state.views.some(v=>v.area);
+  $("modePill").textContent=!state.productType?"Choose a product type":(design?("Design · "+V().label):("Set up · "+(V()?V().label:"")));renderTabs();refreshInspector();}
+
+/* ---- inspector ---- */
+function refreshInspector(){
+  const el=$("inspector");
+  if(!state.productType){el.innerHTML=`<h3>Product type</h3>
+    <button class="typecard" id="tyFlat"><b>Flat product</b><small>Tee, tote, card, notebook — one or more printable sides (Front / Back).</small></button>
+    <button class="typecard" id="tyCyl"><b>Cylindrical (360° wrap)</b><small>Mug, bottle, tumbler — one wrap, previewed on front / left / right.</small></button>`;
+    $("tyFlat").onclick=()=>chooseType("flat");$("tyCyl").onclick=()=>chooseType("cylinder");return;}
+  const v=V();
+  if(state.mode!=="design"){ // SETUP (admin-style)
+    const cyl=v.type==="cylinder";
+    el.innerHTML=`<h3>${v.label} · product image${cyl?"s":""}</h3>
+      <label class="check"><input type="checkbox" id="bgchk" ${state.bgRemove?"checked":""}> Auto-remove white background</label>
+      ${cyl?`<div class="uprow">
+          <button data-up="front" class="${v.src?"set":""}">${v.src?"Front ✓":"Front"}</button>
+          <button data-up="left" class="${v.leftSrc?"set":""}">${v.leftSrc?"Left ✓":"Left"}</button>
+          <button data-up="right" class="${v.rightSrc?"set":""}">${v.rightSrc?"Right ✓":"Right"}</button>
+        </div>
+        <div class="seg" style="margin-bottom:8px"><button data-s="mug" class="ghost">Sample mug</button><button data-s="bottle" class="ghost">Sample bottle</button></div>`
+       :`<div class="seg" style="margin-bottom:8px"><button id="pUpload">Upload photo</button><button id="pSample" class="ghost">Sample ▾</button></div>
+         <div id="sampleRow" class="seg" hidden style="margin-bottom:8px"><button data-s="tee" class="ghost">Tee</button><button data-s="tote" class="ghost">Tote</button><button data-s="mug" class="ghost">Mug</button><button data-s="crystal" class="ghost">Crystal</button></div>`}
+      <div class="divider"></div>
+      <h3>Real dimensions</h3>
+      ${cyl?`<div class="minlbl" style="text-align:left;margin-bottom:5px">Product size</div>
+            <div class="row"><div class="field"><label>Height (mm)</label><input type="number" id="inPH" value="${v.productH}"></div><div class="field"><label>Diameter (mm)</label><input type="number" id="inDia" value="${v.dia}"></div></div>
+            <div class="minlbl" style="text-align:left;margin:2px 0 5px">Print / logo area</div>
+            <div class="row"><div class="field"><label>Logo height (mm)</label><input type="number" id="inLH" value="${v.printH}"></div><div class="field"><label>Perimeter (mm)</label><input type="number" value="${Math.round(Math.PI*v.dia)}" disabled></div></div>
+            <div class="hint" style="margin:-2px 0 8px">Wrap width = π × ${v.dia} = <b>${Math.round(Math.PI*v.dia)} mm</b>. Logo band = <b>${Math.round(v.printH/v.productH*100)}%</b> of product height.</div>`
+           :`<div class="row"><div class="field"><label>Width (mm)</label><input type="number" id="inW" value="${v.realW}"></div><div class="field"><label>Height (mm)</label><input type="number" id="inH" value="${v.realH}"></div></div>`}
+      <div class="row"><div class="field"><label>DPI</label><input type="number" id="inDpi" value="${v.dpi}"></div><div class="field"><label>Safe margin (mm)</label><input type="number" id="inSafe" value="${v.safe}"></div></div>
+      <div class="divider"></div>
+      <h3>Material & available print methods <span class="badge">admin</span></h3>
+      <div class="field"><label>Material</label><select id="matSel">${MATERIALS.map(m=>`<option ${state.material===m?"selected":""}>${m}</option>`).join("")}</select></div>
+      <div id="availRows"></div>
+      <div class="divider"></div>
+      <h3>Commercials <span class="badge">admin</span></h3>
+      <div class="row"><div class="field"><label>Product price (${CUR})</label><input type="number" id="inBase" value="${state.productBase}"></div><div class="field"><label>VAT %</label><input type="number" id="inVat" value="${state.vatPct}"></div></div>
+      <div class="row"><div class="field"><label>Delivery (${CUR})</label><input type="number" id="inDel" value="${state.delivery}"></div><div class="field"><label>Per element (${CUR})</label><input type="number" id="inEl" value="${state.perElement}"></div></div>
+      <div class="divider"></div>
+      <h3>Printing price calculation <span class="badge">admin</span></h3>
+      <div id="priceEdit"></div>
+      <button class="primary" id="btnLock" style="width:100%;margin-top:6px" ${v.src?"":"disabled"}>Lock & start designing →</button>
+      <div class="note">${cyl?"Front image is the edit canvas; left & right are previewed on review.":"Height snaps to your width×height ratio when locked."} Material sets the engraving look (wood → burn brown, crystal → frosted).</div>`;
+    const bg=$("bgchk");if(bg)bg.onchange=e=>state.bgRemove=e.target.checked;
+    if($("pUpload"))$("pUpload").onclick=()=>{window.__slot="front";$("fileProduct").click();};
+    if($("pSample"))$("pSample").onclick=()=>{const r=$("sampleRow");r.hidden=!r.hidden;};
+    el.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>{window.__slot=b.dataset.up;$("fileProduct").click();});
+    el.querySelectorAll("[data-s]").forEach(b=>b.onclick=async()=>{
+      const url=sampleURL(b.dataset.s);
+      if(V().type==="cylinder"){const im=await prepImage(url);const vv=V();vv.leftSrc=im;vv.src=im;vv.rightSrc=im;rebuildCanvas();}
+      else{window.__slot="front";await setProductImage(url,"front");}});
+    $("matSel").onchange=e=>{state.material=e.target.value;};
+    if($("inBase"))$("inBase").onchange=e=>{state.productBase=clampNum(e.target.value,0,100000,state.productBase);};
+    if($("inVat"))$("inVat").onchange=e=>{state.vatPct=clampNum(e.target.value,0,100,state.vatPct);};
+    if($("inDel"))$("inDel").onchange=e=>{state.delivery=clampNum(e.target.value,0,100000,state.delivery);};
+    if($("inEl"))$("inEl").onchange=e=>{state.perElement=clampNum(e.target.value,0,10000,state.perElement);};
+    if($("inPH"))$("inPH").onchange=e=>{v.productH=clampNum(e.target.value,10,2000,v.productH);rebuildCanvas();};
+    if($("inDia"))$("inDia").onchange=e=>{v.dia=clampNum(e.target.value,5,500,v.dia);v.realW=Math.round(Math.PI*v.dia);rebuildCanvas();};
+    if($("inLH"))$("inLH").onchange=e=>{v.printH=clampNum(e.target.value,5,v.productH,v.printH);v.realH=v.printH;rebuildCanvas();};
+    renderAvailRows();renderPriceEdit();
+    if($("btnLock"))$("btnLock").onclick=lockArea;return;
+  }
+  // DESIGN
+  const o=canvas.getActiveObject();let html="";
+  if(!o||o.koRole!=="design"){
+    html=`<h3>${v.label} · elements</h3><div class="hint">Add text, image or shape from the left. Select an element to edit it.<br><br>Print area <span class="badge">${v.realW}×${v.realH} mm · ${v.dpi} DPI</span></div>
+      <button class="ghost" id="reArea" style="width:100%;margin-top:8px">↺ Re-define print area</button>`;
+  } else if(o.type==="i-text"){
+    const lim=optLimit();
+    html=`<h3>Text</h3>
+      <div class="field"><label>Content</label><input type="text" id="tv" value="${(o.text||"").replace(/"/g,'&quot;')}"></div>
+      <div class="field"><label>Font</label><select id="tf" style="font-family:'${o.fontFamily}',sans-serif">${FONTS.map(f=>`<option style="font-family:'${f}'" ${o.fontFamily===f?"selected":""}>${f}</option>`).join("")}</select></div>
+      <div class="field"><label>Size <span id="tsv" style="color:var(--muted)">${Math.round(o.fontSize)}</span></label><input type="range" id="ts" min="8" max="${Math.round(v.area.width*0.5)}" value="${Math.round(o.fontSize)}"></div>
+      <div class="field"><label>Letter spacing</label><input type="range" id="tls" min="-40" max="500" value="${o.charSpacing||0}"></div>
+      <div class="field"><label>Color${lim>0?` <span class="badge">${lim}-color limit</span>`:""}</label><div class="swatches" id="tsw"></div>${lim>0?"":`<input type="color" id="tc" value="${hex(o.fill)}" style="margin-top:7px">`}</div>
+      <div class="seg"><button id="tb">${o.fontWeight==="bold"?"Bold ✓":"Bold"}</button><button id="ti">${o.fontStyle==="italic"?"Italic ✓":"Italic"}</button><button id="tu">${o.underline?"U ✓":"U"}</button></div>
+      <div class="seg" style="margin-top:6px"><button id="talignL">Left</button><button id="talignC">Center</button><button id="talignR">عربي ▸</button><button id="tcase">AA</button></div>`;
+  } else if(o.type==="image"){
+    const mpp=v.realW/v.area.width,natW=(o._originalElement&&o._originalElement.naturalWidth)||o.width,wmm=o.getScaledWidth()*mpp,need=wmm/25.4*v.dpi,ratio=natW/need;
+    html=`<h3>Image</h3><div class="hint">Drag to move, corners to scale. Outside the boundary is clipped.</div><div class="hint" style="margin-top:8px">${ratio>=1?`<span class="tag ok">Resolution OK</span>`:`<span class="tag warn">Low resolution</span> — ${natW}px native, ~${Math.round(need)}px needed.`}</div>`;
+  } else {
+    const lim=optLimit();
+    html=`<h3>Shape</h3><div class="field"><label>Fill${lim>0?` <span class="badge">${lim}-color limit</span>`:""}</label><div class="swatches" id="ssw"></div>${lim>0?"":`<input type="color" id="sc" value="${hex(o.fill)}" style="margin-top:7px">`}</div>`;
+  }
+  html+=`<div class="divider"></div><h3>Finish &amp; price</h3><div id="methodRows"></div><div id="colorRow"></div><div class="pricebox" id="priceBox"></div>`;
+  el.innerHTML=html;
+  // bind element controls
+  if(o&&o.type==="i-text"){
+    const lim=optLimit(),pal=lim>0?state.spots.slice(0,lim):null;
+    $("tv").oninput=e=>{o.set("text",e.target.value);canvas.requestRenderAll();};
+    $("tf").onchange=e=>{o.set("fontFamily",e.target.value);canvas.requestRenderAll();};
+    $("ts").oninput=e=>{o.set("fontSize",parseInt(e.target.value));$("tsv").textContent=e.target.value;canvas.requestRenderAll();};
+    $("tls").oninput=e=>{o.set("charSpacing",parseInt(e.target.value));canvas.requestRenderAll();};
+    if($("tc"))$("tc").oninput=e=>{o.set("fill",e.target.value);canvas.requestRenderAll();};
+    $("tb").onclick=()=>{o.set("fontWeight",o.fontWeight==="bold"?"normal":"bold");refreshInspector();canvas.requestRenderAll();};
+    $("ti").onclick=()=>{o.set("fontStyle",o.fontStyle==="italic"?"normal":"italic");refreshInspector();canvas.requestRenderAll();};
+    $("tu").onclick=()=>{o.set("underline",!o.underline);refreshInspector();canvas.requestRenderAll();};
+    $("talignL").onclick=()=>{o.set({textAlign:"left",direction:"ltr"});canvas.requestRenderAll();};
+    $("talignC").onclick=()=>{o.set({textAlign:"center",direction:"ltr"});canvas.requestRenderAll();};
+    $("talignR").onclick=()=>{o.set({textAlign:"right",direction:"rtl"});canvas.requestRenderAll();};
+    $("tcase").onclick=()=>{o.set("text",(o.text||"").toUpperCase());refreshInspector();canvas.requestRenderAll();};
+    swatches("tsw",c=>{o.set("fill",c);if($("tc"))$("tc").value=hex(c);canvas.requestRenderAll();},pal);
+  } else if(o&&o.type!=="image"&&o.koRole==="design"){
+    const lim=optLimit(),pal=lim>0?state.spots.slice(0,lim):null;
+    if($("sc"))$("sc").oninput=e=>{o.set("fill",e.target.value);canvas.requestRenderAll();};
+    swatches("ssw",c=>{o.set("fill",c);if($("sc"))$("sc").value=hex(c);canvas.requestRenderAll();},pal);
+  }
+  if($("reArea"))$("reArea").onclick=()=>{v.area=null;rebuildCanvas();};
+  renderPrintPanel();
+}
+async function maybeBg(url){return state.bgRemove?await removeWhiteBg(url):url;}
+function autoCrop(url){return new Promise(res=>{const im=new Image();im.onload=()=>{
+  const c=document.createElement("canvas");c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext("2d");x.drawImage(im,0,0);
+  let d;try{d=x.getImageData(0,0,c.width,c.height).data;}catch(e){res(url);return;}
+  let minX=c.width,minY=c.height,maxX=0,maxY=0,found=false;
+  for(let y=0;y<c.height;y++)for(let xx=0;xx<c.width;xx++){if(d[(y*c.width+xx)*4+3]>14){found=true;if(xx<minX)minX=xx;if(xx>maxX)maxX=xx;if(y<minY)minY=y;if(y>maxY)maxY=y;}}
+  if(!found){res(url);return;}
+  const pad=2,sx=Math.max(0,minX-pad),sy=Math.max(0,minY-pad),bw=Math.min(c.width-sx,maxX-minX+1+pad*2),bh=Math.min(c.height-sy,maxY-minY+1+pad*2);
+  const o=document.createElement("canvas");o.width=bw;o.height=bh;o.getContext("2d").drawImage(c,sx,sy,bw,bh,0,0,bw,bh);res(o.toDataURL());
+};im.onerror=()=>res(url);im.src=url;});}
+async function prepImage(url){return autoCrop(await maybeBg(url));}
+const PLABEL={setup:"Setup",perUnit:"Per item",perColor:"Per color",perCm2:"Per cm²",minCharge:"Min"};
+function groupOpts(ids){const g=[];ids.forEach(m=>{let x=g.find(y=>y.group===m.group);if(!x){x={group:m.group,items:[]};g.push(x);}x.items.push(m);});return g;}
+function renderPriceEdit(){const box=$("priceEdit");if(!box)return;
+  box.innerHTML=METHODS.map(m=>`<div style="border:1px solid var(--border-strong);border-radius:9px;padding:8px 10px;margin-bottom:7px">
+    <div style="font-size:12.5px;font-weight:600;margin-bottom:6px">${m.group} · ${m.label} <span style="color:var(--muted);font-weight:400">(${CUR})</span></div>
+    <div class="row" style="flex-wrap:wrap;gap:6px">${Object.keys(m.price).map(k=>`<div style="flex:1;min-width:72px"><label style="font-size:10.5px;color:var(--muted);display:block;margin-bottom:2px">${PLABEL[k]||k}</label><input type="number" step="0.01" data-pm="${m.id}" data-pk="${k}" value="${m.price[k]}" style="padding:5px 7px;font-size:12px"></div>`).join("")}</div></div>`).join("");
+  box.querySelectorAll("[data-pm]").forEach(inp=>inp.onchange=e=>{const m=methodById(e.target.dataset.pm);if(m){m.price[e.target.dataset.pk]=parseFloat(e.target.value)||0;updateStatus();}});}
+function renderAvailRows(){const box=$("availRows");if(!box)return;
+  box.innerHTML=groupOpts(METHODS).map(g=>`<div style="margin-bottom:5px"><div style="font-size:11px;color:var(--muted);margin-bottom:2px">${g.group}</div>${g.items.map(m=>`<label class="check" style="margin:2px 0"><input type="checkbox" data-av="${m.id}" ${state.methodsAvail.includes(m.id)?"checked":""}> ${m.label}</label>`).join("")}</div>`).join("");
+  box.querySelectorAll("[data-av]").forEach(c=>c.onchange=e=>{const id=e.target.dataset.av;if(e.target.checked){if(!state.methodsAvail.includes(id))state.methodsAvail.push(id);}else state.methodsAvail=state.methodsAvail.filter(x=>x!==id);});}
+function applySpotsToDesign(){if(optLimit()!==1)return;const sp=state.spots[0]||"#0f2748";designObjs().forEach(o=>{if(o.type!=="image")o.set("fill",sp);});canvas.requestRenderAll();}
+function renderPrintPanel(){
+  const box=$("methodRows");if(!box)return;const v=V();
+  const avail=METHODS.filter(m=>state.methodsAvail.includes(m.id));
+  if(!avail.some(m=>m.id===state.method))state.method=avail[0]?avail[0].id:null;
+  box.innerHTML=groupOpts(avail).map(g=>`<div style="margin-bottom:7px"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">${g.group}</div><div class="chips">${g.items.map(m=>`<div class="chip ${state.method===m.id?"on":""}" data-m="${m.id}">${m.label}</div>`).join("")}</div></div>`).join("");
+  box.querySelectorAll("[data-m]").forEach(c=>c.onclick=()=>{state.method=c.dataset.m;state.colorErr="";refreshInspector();updateStatus();});
+  const m=methodById(state.method),cr=$("colorRow");let h="";
+  if(m&&m.limit>0&&m.effect==="ink"){h+=`<div style="font-size:12px;color:var(--ink-soft);margin:9px 0 4px">Spot color${m.limit>1?"s":""} (${m.limit})</div><div class="row">`;for(let i=0;i<m.limit;i++)h+=`<input type="color" data-spot="${i}" value="${state.spots[i]||"#0f2748"}">`;h+=`</div>`;}
+  if(state.colorErr)h+=`<div style="font-size:11.5px;color:var(--danger);background:color-mix(in srgb,var(--danger) 10%,transparent);border:1px solid var(--danger);border-radius:8px;padding:7px 9px;margin-top:8px">⚠ ${state.colorErr}</div>`;
+  h+=`<div class="hint" style="margin:8px 0 2px">Design elements: <b>${elementCount()}</b> × ${CUR}${state.perElement} added to each item's print</div>`;
+  h+=`<div class="field" style="margin-top:4px"><label>Quantity</label><input type="number" id="qty" min="1" value="${state.qty}"></div>`;
+  h+=`<label class="check"><input type="checkbox" id="cardChk" ${state.card.enabled?"checked":""}> Add message card (with your wish) <span class="badge">+${CUR}${CARD_PRICE}/item</span></label>`;
+  if(state.card.enabled)h+=`<div class="field"><label>Card message</label><input type="text" id="cardMsg" value="${(state.card.text||"").replace(/"/g,'&quot;')}" placeholder="Happy Birthday, Aisha!"></div>
+    <div class="row"><div class="field"><label>Card font</label><select id="cardFont" style="font-family:'${state.card.font}'">${FONTS.map(f=>`<option style="font-family:'${f}'" ${state.card.font===f?"selected":""}>${f}</option>`).join("")}</select></div><div class="field"><label>Text color</label><input type="color" id="cardColor" value="${state.card.color}"></div></div>
+    <div class="row"><div class="field"><label>Card W (mm)</label><input type="number" id="cardW" value="${state.card.w}"></div><div class="field"><label>Card H (mm)</label><input type="number" id="cardH" value="${state.card.h}"></div></div>
+    <div class="hint" style="margin-top:-2px">A6 landscape card · text only, your font &amp; color.</div>`;
+  cr.innerHTML=h;
+  cr.querySelectorAll("[data-spot]").forEach(inp=>inp.oninput=e=>{state.spots[+e.target.dataset.spot]=e.target.value;applySpotsToDesign();updateStatus();});
+  if($("qty"))$("qty").onchange=e=>{state.qty=Math.max(1,parseInt(e.target.value)||1);refreshInspector();updateStatus();};
+  if($("cardChk"))$("cardChk").onchange=e=>{state.card.enabled=e.target.checked;refreshInspector();updateStatus();};
+  if($("cardMsg"))$("cardMsg").oninput=e=>state.card.text=e.target.value;
+  if($("cardFont"))$("cardFont").onchange=e=>state.card.font=e.target.value;
+  if($("cardColor"))$("cardColor").oninput=e=>state.card.color=e.target.value;
+  if($("cardW"))$("cardW").onchange=e=>state.card.w=clampNum(e.target.value,50,300,state.card.w);
+  if($("cardH"))$("cardH").onchange=e=>state.card.h=clampNum(e.target.value,50,300,state.card.h);
+  const pr=orderPrice(),pb=$("priceBox");
+  if(pb&&pr)pb.innerHTML=`<div class="l"><span>Product (${CUR}${state.productBase} × ${pr.qty})</span><span>${CUR} ${pr.productTotal.toFixed(2)}</span></div><div class="l"><span>Customization × ${pr.qty} (${pr.nEl} elem${state.card.enabled?" + card":""})</span><span>${CUR} ${pr.printTotal.toFixed(2)}</span></div><div class="l"><span>VAT ${state.vatPct}%</span><span>${CUR} ${pr.vat.toFixed(2)}</span></div><div class="l"><span>Delivery</span><span>${CUR} ${pr.delivery.toFixed(2)}</span></div><div class="t"><span>Cart total</span><span>${CUR} ${pr.grand.toFixed(2)}</span></div>`;
+}
+function swatches(id,cb,pal){const box=$(id);if(!box)return;box.innerHTML="";(pal||SW).forEach(c=>{const s=document.createElement("div");s.className="sw";s.style.background=c;s.onclick=()=>cb(c);box.appendChild(s);});}
+function toRGB(hx){const h=hx.replace("#","");return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function lum(c){return 0.3*c[0]+0.59*c[1]+0.11*c[2];}
+function renderCard(){const w=Math.round(state.card.w*4),h=Math.round(state.card.h*4);const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,w,h);x.strokeStyle="#dfe6ef";x.lineWidth=2;x.strokeRect(1,1,w-2,h-2);x.fillStyle=state.card.color;const fs=Math.round(h*0.13);x.font=`600 ${fs}px '${state.card.font}',sans-serif`;x.textAlign="center";x.textBaseline="middle";cardWrap(x,state.card.text||"Your message",w/2,h/2,w*0.84,fs*1.25);return c.toDataURL();}
+function cardWrap(ctx,text,cx,cy,maxW,lh){const words=(text||"").split(/\s+/);const lines=[];let line="";words.forEach(wd=>{const t=line?line+" "+wd:wd;if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=wd;}else line=t;});if(line)lines.push(line);const startY=cy-(lines.length-1)*lh/2;lines.forEach((l,i)=>ctx.fillText(l,cx,startY+i*lh));}
+function hex(c){if(!c)return"#000000";if(c[0]==="#")return c.length===4?"#"+[...c.slice(1)].map(x=>x+x).join(""):c;const m=c.match(/\d+/g);if(!m)return"#000000";return"#"+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,"0")).join("");}
+
+/* ---- print-effect post-processing ---- */
+function applyEffect(src){return new Promise(res=>{const im=new Image();im.onload=()=>{
+  const c=document.createElement("canvas");c.width=im.width;c.height=im.height;const x=c.getContext("2d");x.drawImage(im,0,0);
+  const m=methodById(state.method);if(!m){res(src);return;}
+  const d=x.getImageData(0,0,c.width,c.height),p=d.data;
+  if(m.effect==="engrave"){
+    const crystal=(state.material==="crystal"||state.material==="glass");
+    for(let i=0;i<p.length;i+=4){if(p[i+3]<10)continue;const g=0.3*p[i]+0.59*p[i+1]+0.11*p[i+2];
+      if(crystal){p[i]=235;p[i+1]=240;p[i+2]=245;p[i+3]=Math.round((255-g)/255*200)+30;}
+      else{const t=(255-g)/255;p[i]=Math.round(60+t*50);p[i+1]=Math.round(36+t*30);p[i+2]=Math.round(14+t*12);p[i+3]=Math.round(t*255);}}
+  } else if(m.effect==="ink"&&m.limit>0){
+    const sp=state.spots.slice(0,m.limit).map(toRGB).sort((a,b)=>lum(a)-lum(b));
+    for(let i=0;i<p.length;i+=4){if(p[i+3]<10)continue;const col=sp.length===1?sp[0]:(lum([p[i],p[i+1],p[i+2]])<128?sp[0]:sp[sp.length-1]);p[i]=col[0];p[i+1]=col[1];p[i+2]=col[2];}
+  }
+  x.putImageData(d,0,0);res(c.toDataURL());};im.onerror=()=>res(src);im.src=src;});}
+
+/* ---- cylinder curve + slice ---- */
+function curveSlice(img,startFrac,widthFrac){
+  const sx0=Math.floor(img.width*startFrac),sw=Math.max(1,Math.floor(img.width*widthFrac));
+  const W=Math.min(300,sw*2),H=Math.round(W*img.height/sw);
+  const s=document.createElement("canvas");s.width=img.width;s.height=img.height;s.getContext("2d").drawImage(img,0,0);
+  const out=document.createElement("canvas");out.width=W;out.height=H;const ctx=out.getContext("2d");
+  for(let x=0;x<W;x++){const u=x/(W-1);const su=(Math.asin(2*u-1)/Math.PI)+0.5;const sx=sx0+su*sw;const bow=Math.sin(u*Math.PI);const dh=H*(0.9+0.1*bow);const dy=(H-dh)/2;ctx.drawImage(s,Math.max(0,Math.min(img.width-1,sx)),0,1,img.height,x,dy,1,dh);}
+  const g=ctx.createLinearGradient(0,0,W,0);g.addColorStop(0,"rgba(0,0,0,.26)");g.addColorStop(.5,"rgba(255,255,255,.05)");g.addColorStop(1,"rgba(0,0,0,.26)");ctx.globalCompositeOperation="source-atop";ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  return out.toDataURL();
+}
+
+function curveCanvas(src){const W=src.width,H=src.height,out=document.createElement("canvas");out.width=W;out.height=H;const ctx=out.getContext("2d");
+  for(let x=0;x<W;x++){const u=x/(W-1);const su=(Math.asin(2*u-1)/Math.PI)+0.5;const sx=Math.max(0,Math.min(W-1,su*W));ctx.drawImage(src,sx,0,1,H,x,0,1,H);}
+  const g=ctx.createLinearGradient(0,0,W,0);g.addColorStop(0,"rgba(0,0,0,.22)");g.addColorStop(.5,"rgba(255,255,255,.04)");g.addColorStop(1,"rgba(0,0,0,.22)");ctx.globalCompositeOperation="source-atop";ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation="source-over";return out;}
+function previewBottle(bImg,artImg,k,n,topFrac,hFrac){
+  const Wp=Math.min(220,bImg.width),sc=Wp/bImg.width,Hp=Math.round(bImg.height*sc);
+  const c=document.createElement("canvas");c.width=Wp;c.height=Hp;const ctx=c.getContext("2d");
+  ctx.drawImage(bImg,0,0,Wp,Hp);
+  const sw=Math.max(1,Math.floor(artImg.width/n)),sx=Math.floor(artImg.width*k/n);
+  const slice=document.createElement("canvas");slice.width=sw;slice.height=artImg.height;slice.getContext("2d").drawImage(artImg,sx,0,sw,artImg.height,0,0,sw,artImg.height);
+  const curved=curveCanvas(slice);
+  const layer=document.createElement("canvas");layer.width=Wp;layer.height=Hp;const lx=layer.getContext("2d");
+  lx.drawImage(curved,0,Hp*topFrac,Wp,Hp*hFrac);
+  lx.globalCompositeOperation="destination-in";lx.drawImage(bImg,0,0,Wp,Hp); // mask art to bottle silhouette
+  ctx.drawImage(layer,0,0);
+  return c.toDataURL();
+}
+function buildMockupPrompt(){
+  const v=V(),m=methodById(state.method);const obj=state.productType==="cylinder"?(state.material==="ceramic"?"mug":"bottle / tumbler"):`${state.material} product`;
+  const card=state.card.enabled?` Beside the product, place a matching A6 landscape greeting card standing upright that reads "${state.card.text||"your message"}" in an elegant ${state.card.font} font.`:"";
+  return `Use the attached printed artwork exactly as the design. Strict product lock: keep a real ${state.material} ${obj}'s true shape, proportions and surface finish; apply ONLY this artwork onto its print area (${v.realW} × ${v.realH} mm, ${m?(m.group+" "+m.label).toLowerCase():"print"}${m&&m.effect==="engrave"?` — ${state.material==="wood"?"burn-brown engraved":state.material==="crystal"?"frosted glass engraved":"etched"} look`:""}), wrapped realistically to the surface — not a flat sticker.${card} Place everything in a warm, premium lifestyle scene with soft natural light and a gently blurred background, the artwork facing the camera and clearly readable. Photorealistic, high detail, 1:1.`;
+}
+
+function renderQuote(printSrc,mockupSrc,pr,m,v){
+  const box=$("quoteBox");if(!box)return;const d=new Date().toLocaleDateString();
+  box.innerHTML=`<div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:6px">
+    <div style="background:var(--ink);color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-weight:700">Krossover · Customization Quote</div><div style="font-size:11px;opacity:.8">${d}</div></div>
+      <div style="font-size:11px;opacity:.85">Ref KO-${Date.now().toString().slice(-6)}</div></div>
+    <div style="padding:12px 14px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:12px">
+        <div><div class="minlbl" style="text-align:left">Print file</div><div class="checker"><img src="${printSrc}" style="max-height:120px"></div></div>
+        <div><div class="minlbl" style="text-align:left">Product mockup</div><div class="checker" style="background:#eef2f8"><img id="qMockup" src="${mockupSrc}" style="max-height:120px"></div></div>
+        ${state.card.enabled?`<div><div class="minlbl" style="text-align:left">Message card</div><div class="checker" style="background:#eef2f8"><img src="${renderCard()}" style="max-height:120px"></div></div>`:""}</div>
+      <table style="width:100%;font-size:12.5px"><tbody>
+        <tr><td style="padding:3px 0;color:var(--muted)">Product</td><td style="text-align:right">${state.productType} · ${state.material}</td></tr>
+        <tr><td style="padding:3px 0;color:var(--muted)">Print method</td><td style="text-align:right">${m?m.group+" · "+m.label:""}</td></tr>
+        <tr><td style="padding:3px 0;color:var(--muted)">Quantity</td><td style="text-align:right">${pr.qty}</td></tr>
+        <tr><td style="padding:3px 0;color:var(--muted)">Print size</td><td style="text-align:right">${v.realW}×${v.realH} mm @ ${v.dpi} DPI</td></tr>
+      </tbody></table>
+      <div class="pricebox" style="margin-top:8px"><div class="l"><span>Product × ${pr.qty}</span><span>${CUR} ${pr.productTotal.toFixed(2)}</span></div><div class="l"><span>Customization × ${pr.qty}${state.card.enabled?" + card":""}</span><span>${CUR} ${pr.printTotal.toFixed(2)}</span></div><div class="l"><span>VAT ${state.vatPct}%</span><span>${CUR} ${pr.vat.toFixed(2)}</span></div><div class="l"><span>Delivery</span><span>${CUR} ${pr.delivery.toFixed(2)}</span></div><div class="t"><span>Cart total</span><span>${CUR} ${pr.grand.toFixed(2)}</span></div></div>
+      <div class="note">Print file + mockup${state.card.enabled?" + message card":""} travel with the cart line. In the app, "Download quote" exports this as an invoice-format PDF via /api/quote.</div>
+    </div></div>`;
+}
+async function genMockup(){
+  const btn=$("btnMockup");btn.disabled=true;btn.textContent="Generating…";
+  const prompt=buildMockupPrompt();const base=(window.KO_STUDIO_API||"").replace(/\/$/,"");
+  try{
+    if(!base)throw new Error("no-api");
+    const r=await fetch(base+"/mockup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt,printFileDataUrl:state.lastPrintFile,productType:state.productType,material:state.material,size:"1024x1024"})});
+    const j=await r.json();const img=j.dataUrl||j.url;if(!img)throw new Error("no-image");
+    state.lastMockup=img;const q=$("qMockup");if(q)q.src=img;btn.textContent="✓ Mockup generated";
+  }catch(e){
+    const t=$("mockupPrompt");t.value=prompt;$("mockupBox").hidden=false;t.select();navigator.clipboard&&navigator.clipboard.writeText(t.value).catch(()=>{});btn.textContent="Prompt copied for your AI tool";
+  }
+  setTimeout(()=>{btn.textContent="✨ Generate AI mockup";btn.disabled=false;},1900);
+}
+
+/* ---- export / review ---- */
+function renderArt(v){return new Promise(res=>{const mult=mm2px(v.realW,v.dpi)/v.area.width;const sc=new fabric.StaticCanvas(null,{width:canvas.width,height:canvas.height,enableRetinaScaling:false});
+  fabric.util.enlivenObjects((v.design||[]),objs=>{objs.forEach(o=>{o.clipPath=clipRectFrom(v.area);sc.add(o);});sc.renderAll();res(sc.toDataURL({format:"png",left:v.area.left,top:v.area.top,width:v.area.width,height:v.area.height,multiplier:mult}));});});}
+async function exportPrint(){
+  persistView();const ready=state.views.filter(v=>v.area);if(!ready.length)return;
+  const gal=$("outGallery");gal.innerHTML="";
+  for(const v of ready){
+    const raw=await renderArt(v);const art=await applyEffect(raw);
+    const block=document.createElement("div");block.className="outview";
+    let body=`<div class="minlbl">Print file (${methodById(state.method)?methodById(state.method).label:""})</div><div class="checker"><img src="${art}"></div>`;
+    if(v.type==="cylinder"){
+      const artImg=await loadHTMLImg(art);const pk=state.cylPack;
+      let topFrac=0.33,hFrac=0.3;if(pk&&v.area){topFrac=(v.area.top-pk.top)/pk.imgH;hFrac=v.area.height/pk.imgH;}
+      const sides=[["Left",v.leftSrc],["Front",v.src],["Right",v.rightSrc]].filter(s=>s[1]);
+      const cells=[];
+      for(let idx=0;idx<sides.length;idx++){const bImg=await loadHTMLImg(sides[idx][1]);cells.push(`<div><div class="minlbl">${sides[idx][0]}</div><div class="checker" style="background:#eef2f8"><img src="${previewBottle(bImg,artImg,idx,sides.length,topFrac,hFrac)}"></div></div>`);}
+      body=`<div class="grid3">${cells.join("")}</div><div class="minlbl" style="margin-top:8px">Flat wrap print file</div><div class="checker"><img src="${art}"></div>`;}
+    block.innerHTML=`<h4>${v.label}<span style="font-weight:400;color:var(--muted);font-size:12px">${mm2px(v.realW,v.dpi)}×${mm2px(v.realH,v.dpi)}px · ${v.realW}×${v.realH}mm @ ${v.dpi}DPI</span></h4>${body}`;
+    gal.appendChild(block);
+  }
+  const pr=orderPrice(),m=methodById(state.method);
+  $("outPrice").innerHTML=`<div class="l"><span>${m?m.group+" · "+m.label:"—"}</span><span>qty ${pr.qty}</span></div><div class="l"><span>Product × ${pr.qty}</span><span>${CUR} ${pr.productTotal.toFixed(2)}</span></div><div class="l"><span>Customization × ${pr.qty} (${pr.nEl} elem)</span><span>${CUR} ${pr.printTotal.toFixed(2)}</span></div><div class="l"><span>VAT ${state.vatPct}%</span><span>${CUR} ${pr.vat.toFixed(2)}</span></div><div class="l"><span>Delivery</span><span>${CUR} ${pr.delivery.toFixed(2)}</span></div><div class="t"><span>Cart total</span><span>${CUR} ${pr.grand.toFixed(2)}</span></div>`;
+  // quote assets from the first ready view
+  const q=ready[0];const qArt=await applyEffect(await renderArt(q));let qMock=qArt;
+  if(q.type==="cylinder"){const ai=await loadHTMLImg(qArt);const pk=state.cylPack;let tf=0.33,hf=0.3;if(pk&&q.area){tf=(q.area.top-pk.top)/pk.imgH;hf=q.area.height/pk.imgH;}
+    const present=[["Left",q.leftSrc],["Front",q.src],["Right",q.rightSrc]].filter(s=>s[1]);const fi=Math.max(0,present.findIndex(s=>s[0]==="Front"));const fb=await loadHTMLImg(q.src);qMock=previewBottle(fb,ai,fi,present.length,tf,hf);}
+  state.lastPrintFile=qArt;state.lastMockup=qMock;renderQuote(qArt,qMock,pr,m,q);
+  const payload={product:{type:state.productType,material:state.material,basePrice:state.productBase},qty:pr.qty,print:{method:state.method,label:(m?m.group+" "+m.label:""),spots:m&&m.limit>0?state.spots.slice(0,m.limit):null},card:state.card.enabled?{text:state.card.text,font:state.card.font,color:state.card.color,sizeMm:[state.card.w,state.card.h]}:null,pricing:{elements:pr.nEl,perElement:state.perElement,productTotal:pr.productTotal,printTotal:pr.printTotal,vat:pr.vat,delivery:pr.delivery,grand:pr.grand},assets:{printFile:"(dataURL)",mockup:state.lastMockup?"(dataURL)":null,card:state.card.enabled?"(dataURL)":null},views:ready.map(v=>({label:v.label,printArea:{realWidthMm:v.realW,realHeightMm:v.realH,dpi:v.dpi,pxWidth:mm2px(v.realW,v.dpi),pxHeight:mm2px(v.realH,v.dpi)},elements:v.design||[]}))};
+  $("outJson").value=JSON.stringify(payload,null,2);$("outDlg").showModal();
+}
+
+/* ---- boot ---- */
+function saveSetup(){
+  const sku=state.adminSku;if(!sku)return;const v=V();
+  persistView&&persistView();
+  const cfg={sku,type:state.productType,material:state.material,
+    views:state.views.map(vw=>({label:vw.label,type:vw.type,realW:vw.realW,realH:vw.realH,dpi:vw.dpi,safe:vw.safe,productH:vw.productH,dia:vw.dia,printH:vw.printH,hasArea:!!vw.area,hasImages:!!(vw.src||vw.leftSrc||vw.rightSrc)})),
+    methodsAvail:state.methodsAvail.slice(),
+    prices:Object.fromEntries(METHODS.map(m=>[m.id,m.price])),
+    productBase:state.productBase,vatPct:state.vatPct,delivery:state.delivery,perElement:state.perElement};
+  try{const all=JSON.parse(localStorage.getItem("ko_setup")||"{}");all[sku]=cfg;localStorage.setItem("ko_setup",JSON.stringify(all));}catch(e){}
+  const base=(window.KO_STUDIO_API||"").replace(/\/$/,"");
+  if(base){fetch(base+"/products/"+encodeURIComponent(sku),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(cfg)}).catch(()=>{});}
+  const b=$("btnSaveSetup");b.textContent="✓ Saved — returning…";setTimeout(()=>{location.href="/manager";},700);
+}
+function applyAdminContext(){
+  const q=new URLSearchParams(location.search);const sku=q.get("sku");if(!sku)return;
+  state.adminSku=sku;const name=q.get("name")||sku;const price=parseFloat(q.get("price"));
+  if(!isNaN(price))state.productBase=price;
+  $("hTitle").textContent=name;$("hSub").textContent=sku+" · admin setup"+(!isNaN(price)?" · B2C AED "+price:"");
+  $("backLink").style.display="inline-flex";
+  $("btnSaveSetup").style.display="inline-flex";$("btnExport").style.display="none";
+  $("btnSaveSetup").onclick=saveSetup;
+}
+function boot(){
+  window.KO_STUDIO_API=window.KO_STUDIO_API||new URLSearchParams(location.search).get("api")||"";
+  initCanvas();refreshInspector();renderTabs();updateStatus();updateCaption();applyAdminContext();
+  $("fileProduct").onchange=async e=>{if(e.target.files[0]){const r=new FileReader();r.onload=async ev=>{await setProductImage(ev.target.result,window.__slot||"front");};r.readAsDataURL(e.target.files[0]);}e.target.value="";};
+  $("fileArt").onchange=e=>{if(e.target.files[0])addImage(e.target.files[0]);e.target.value="";};
+  $("tText").onclick=addText;$("tImage").onclick=()=>$("fileArt").click();
+  $("tRect").onclick=()=>addShape("rect");$("tCircle").onclick=()=>addShape("circle");
+  $("tTri").onclick=()=>addShape("triangle");$("tSquare").onclick=()=>addShape("square");
+  $("tDel").onclick=()=>{const o=canvas.getActiveObject();if(o&&o.koRole==="design"){canvas.remove(o);refreshInspector();updateStatus();}};
+  $("tDup").onclick=()=>{const o=canvas.getActiveObject();if(o&&o.koRole==="design")o.clone(cl=>{cl.set({left:o.left+16,top:o.top+16,clipPath:clipRectFrom(V().area)});cl.koRole="design";canvas.add(cl);canvas.setActiveObject(cl);keepGuidesOnTop();},["koRole"]);};
+  $("tFront").onclick=()=>{const o=canvas.getActiveObject();if(o&&o.koRole==="design"){o.bringToFront();keepGuidesOnTop();}};
+  $("btnExport").onclick=exportPrint;$("btnCloseOut").onclick=()=>$("outDlg").close();
+  $("btnMockup").onclick=genMockup;
+  $("btnCopy").onclick=()=>{const t=$("outJson");t.select();navigator.clipboard&&navigator.clipboard.writeText(t.value).catch(()=>{});$("btnCopy").textContent="Copied ✓";setTimeout(()=>$("btnCopy").textContent="Copy payload",1400);};
+  $("btnReset").onclick=()=>{state.productType=null;state.views=[];state.vi=0;state.mode="idle";if(canvas)canvas.clear();boundaryObj=safeObj=productObj=null;renderTabs();setMode();refreshInspector();updateStatus();updateCaption();};
+  $("btnTheme").onclick=()=>{const r=document.documentElement,cur=r.getAttribute("data-theme"),dark=cur?cur==="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.setAttribute("data-theme",dark?"light":"dark");};
+  document.addEventListener("keydown",e=>{if((e.key==="Delete"||e.key==="Backspace")&&canvas){const o=canvas.getActiveObject();if(o&&o.koRole==="design"&&!o.isEditing){canvas.remove(o);refreshInspector();updateStatus();}}});
+  document.fonts&&document.fonts.ready.then(()=>canvas.requestRenderAll());
+}
+if(window.fabric)boot();else window.addEventListener("load",boot);
+</script>
+</body>
+</html>
