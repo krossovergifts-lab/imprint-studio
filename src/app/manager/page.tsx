@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-// ADMIN — Product Manager: the live Krossover catalogue with per-product
+// ADMIN — Product Manager: the live your catalogue with per-product
 // customization setup. Hosts public/product-manager.html.
 export default function Manager() {
   return (
@@ -9,7 +9,7 @@ export default function Manager() {
         <h1>Product Manager <span className="pill">admin</span></h1>
         <Link className="btn ghost" href="/">← Home</Link>
       </div>
-      <p className="sub">Prepare each product for customization — fetched live from the Krossover catalogue, set up once per SKU. Customers never see this.</p>
+      <p className="sub">Prepare each product for customization — fetched live from your catalogue, set up once per SKU. Customers never see this.</p>
       <iframe src="/product-manager.html" title="Krossover Product Manager" style={{ minHeight: 820 }} />
     </main>
   );

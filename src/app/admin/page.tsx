@@ -35,7 +35,7 @@ export default function Admin() {
           <label>Delivery (AED)<br /><input type="number" value={delivery} onChange={(e) => setDelivery(+e.target.value)} style={{ width: 90 }} /></label>
           <label>Per element (AED)<br /><input type="number" value={perElement} onChange={(e) => setPerElement(+e.target.value)} style={{ width: 90 }} /></label>
         </div>
-        <p className="muted" style={{ marginTop: 10 }}>Product price comes from the Krossover catalogue (B2C) per SKU. These apply to every product.</p>
+        <p className="muted" style={{ marginTop: 10 }}>Product price comes from the your catalogue (B2C) per SKU. These apply to every product.</p>
       </div>
 
       {methods.map((m) => (

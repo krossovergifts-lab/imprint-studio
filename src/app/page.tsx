@@ -6,7 +6,7 @@ export default function Home() {
   const count = (catalog as unknown[]).length;
   return (
     <main className="container">
-      <h1>Krossover Studio</h1>
+      <h1>Imprint Studio</h1>
       <p className="sub">Headless product-personalization engine. Two sides: admin prepares each product; customers only design.</p>
 
       <h2 style={{ marginTop: 8 }}>Admin — backend</h2>

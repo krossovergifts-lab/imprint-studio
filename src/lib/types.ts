@@ -1,5 +1,5 @@
 /**
- * Krossover Studio — domain types.
+ * Imprint Studio — domain types.
  * Shared by the admin app, the API, the editor payloads, and the render service.
  */
 

@@ -13,7 +13,7 @@ export default function EditorPage() {
         <Link className="btn ghost" href="/">← Home</Link>
       </div>
       <p className="sub">The embeddable editor. On a storefront this mounts on the product page with the product&apos;s template and allowed methods loaded from the API.</p>
-      <iframe src="/editor.html?api=/api" title="Krossover Studio editor" allow="clipboard-write" />
+      <iframe src="/editor.html?api=/api" title="Imprint Studio editor" allow="clipboard-write" />
     </main>
   );
 }
