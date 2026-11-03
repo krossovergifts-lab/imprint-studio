@@ -1,9 +1,4 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Krossover Studio MVP</title>
+<title>Imprint Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Layout: top bar · view tabs · 3-col workspace · status bar (live price). White-navy, theme-aware. */
@@ -114,12 +109,9 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:11px;bord
 .uprow>button.set{border-color:var(--ok);color:var(--ok)}
 </style>
 
-
-</head>
-<body>
 <div class="wrap">
   <div class="topbar">
-    <div class="brand"><a id="backLink" href="/manager" class="ghost" style="display:none;text-decoration:none;padding:7px 10px;border-radius:8px;border:1px solid var(--border-strong);color:var(--ink);font-size:13px">← Products</a><div class="logo">K</div><div><b id="hTitle">Krossover Studio</b><span id="hSub">Personalization engine · MVP prototype</span></div></div>
+    <div class="brand"><a id="backLink" href="/manager" class="ghost" style="display:none;text-decoration:none;padding:7px 10px;border-radius:8px;border:1px solid var(--border-strong);color:var(--ink);font-size:13px">← Products</a><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6a3 3 0 1 1 6 0c0 1.5-1.2 2.3-1.8 3.2-.4.6-.2 1.3.3 1.6l3.2 1.8c.6.3 1 .9 1 1.6V17H6v-1.8c0-.7.4-1.3 1-1.6l3.2-1.8c.5-.3.7-1 .3-1.6C9.2 8.3 9 7.5 9 6z"/><rect x="5" y="18" width="14" height="3" rx="1"/></svg></div><div><b id="hTitle">Imprint Studio</b><span id="hSub">Personalization engine · MVP prototype</span></div></div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="pill on" id="modePill">Choose a product type</span></div>
     <div class="actions">
       <button id="btnTheme" class="ghost" aria-label="Toggle theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
@@ -585,8 +577,8 @@ function buildMockupPrompt(){
 function renderQuote(printSrc,mockupSrc,pr,m,v){
   const box=$("quoteBox");if(!box)return;const d=new Date().toLocaleDateString();
   box.innerHTML=`<div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:6px">
-    <div style="background:var(--ink);color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
-      <div><div style="font-weight:700">Krossover · Customization Quote</div><div style="font-size:11px;opacity:.8">${d}</div></div>
+    <div style="background:#0f2748;color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-weight:700">Customization Quote</div><div style="font-size:11px;opacity:.8">${d}</div></div>
       <div style="font-size:11px;opacity:.85">Ref KO-${Date.now().toString().slice(-6)}</div></div>
     <div style="padding:12px 14px">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:12px">
@@ -692,5 +684,3 @@ function boot(){
 }
 if(window.fabric)boot();else window.addEventListener("load",boot);
 </script>
-</body>
-</html>

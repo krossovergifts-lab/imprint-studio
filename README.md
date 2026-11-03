@@ -1,96 +1,76 @@
-# Krossover Studio
+# Imprint Studio
 
-A headless, embeddable product-personalization engine for Krossover. Customers design inside a product's real-size print area, pick a printing method, see one final price, and the result becomes a print-ready file plus a cart line. Built to live on every product page across the five Krossover sub-brands, owned outright (no per-sale fees).
+Embeddable product-personalization engine for Krossover Gifts and Shanghai Gifts.
+Brand-neutral — one tool, both storefronts, joined to each store by **SKU**.
 
-> **Status:** the application is complete and runs locally on seed data with zero setup. Going live is a provisioning job (database, storage, keys, your Krossover API) — see `GO-LIVE.md`.
+## What's in here
 
----
+```
+public/
+  product-manager.html   Admin: the full catalogue; shows Ready vs Needs-setup; opens each SKU to set up
+  part-setup.html        Admin: per-SKU setup — print area(s), real dimensions, allowed methods (multi-part)
+  multi-area-studio.html Customer: loads a product by SKU; add text/logo/shapes; live price; add to cart
+  editor.html            Legacy single-canvas editor (kept for reference)
+  embed.js               One-line product-page embed (iframe + cart hand-off)
+INTEGRATION-SPEC.md      Backend contract: product feed, per-SKU setup API, cart payload, VAT rule
+```
 
-## Run it now
+## How it flows
+
+1. **Admin** opens `product-manager.html`, sees every product (Ready / Needs setup),
+   clicks one → `part-setup.html`, marks the print area(s), sets real-world
+   dimensions, and picks the allowed printing methods. Saving stores the setup by SKU.
+2. **Customer** opens a product page with the Studio embedded. It loads that SKU's
+   setup, shows only the artwork tools (text, logo w/ background removal, shapes),
+   and prices live: `product × qty + printing (methods/parts/elements) × qty`.
+3. **Add to cart** sends a structured payload (product line + printing lines +
+   artwork PNGs + ex-VAT subtotal) to the store. **The store applies VAT at checkout.**
+
+## Run it now (offline demo)
+
+Serve `public/` with any static server, e.g.:
 
 ```bash
-npm install
-npm run dev          # http://localhost:3000
+cd public && python3 -m http.server 8080
 ```
 
-- `/` — overview; links to both sides
-- `/manager` — **Admin** Product Manager: all 917 products, per-product customization setup
-- `/admin` — Admin pricing + method toggles
-- `/studio` — **Customer** Design Studio: product pre-set-up, artwork tools only, final price only
-- `/preview3d` — rotatable 3D product with live artwork
+- Admin:    http://localhost:8080/product-manager.html
+- Customer: http://localhost:8080/multi-area-studio.html?sku=11594   (default demo: Bamboo Thermos Bottle)
 
-No database needed to explore; it runs on the bundled catalogue + seed.
+With no backend, the tools use `localStorage`, so the full admin→customer chain
+works: set up a product in the Manager, then click **Preview as customer** on its
+card to open it in the Studio with your real print area and methods.
 
----
+## Go live
 
-## How admin and customer differ (important)
+Follow `INTEGRATION-SPEC.md` — two endpoints (catalogue feed + per-SKU setup) and
+one `onAddToCart` handler. Everything front-end is already built to that contract.
 
-**Admin (backend only) — prepares every product.** You set up each of the ~917 Krossover products once: its print-ready product image, the print area/border, the allowed printing methods, and the prices. These tools live only in the admin Product Manager. The product list is **fetched live from the Krossover website** (`src/lib/catalog-sync.ts`, `GET /api/catalog`) and auto-refreshes, because inventory (stock, new products) changes daily. Studio stores only the customization setup, keyed by SKU (Model Number) — it never copies or edits the product price or stock.
+## Design & artwork features
 
-**Customer (on the website) — designs only.** The customer cannot upload a product photo or change the setup — the product image, print area, and allowed methods are fetched from what the admin prepared. They design inside the fixed area with only the allowed methods, see only the final price, and the only thing they can upload is their own logo (which triggers background removal).
+- **Elements:** Text, Line, Rectangle/Square (corner-radius → rounded), Circle,
+  Triangle (corner-radius → rounded), Heart, uploaded Logo (PNG/JPG, white bg
+  removed). Each element adds the per-element charge.
+- **Material-aware effects:** screen = spot ink, UV/DTF/sublimation = clean full
+  colour, laser/engrave differs by material (bamboo brown, metal steel, glass
+  frosted, leather deboss, stone/ceramic etch).
+- **Colour:** Photoshop-style picker (hue + saturation/value square) with **CMYK
+  fields** (the print colour model) and the **closest Pantone** shown live below —
+  on text, shapes and screen-print spot colours.
+- **Fonts:** the full **Google Fonts** library (300+ families incl. Arabic),
+  searchable, loaded on demand via the Google Fonts API.
+- **Pantone + CMYK:** both shown per element and stamped on the final artwork.
+- **Final artwork outputs** (from the review screen): **Vector SVG** (text + shapes
+  as true vectors, logos embedded) and an **Artwork Production Sheet PDF** listing
+  each element's font, size (mm), colour and Pantone per section. Both also ride
+  along in the `add_to_cart` payload (`artworkVectorSvg`, `artworkSpec`).
 
-## What it does (the complete plan, built)
+## Notes
 
-**The editor** (`public/editor.html`) — flat and cylindrical (360°, front/left/right) products; real product vs print-area dimensions; drag-to-mark print boundary with live clip; text with Google Fonts + full tools (size, spacing, bold/italic/underline, alignment, Arabic/RTL); image/logo upload with auto background-removal; predefined shapes; per-method print-effect previews; whole-product masked preview; AI mockup + message card; invoice-style quote; add-to-cart payload.
-
-**Printing methods engine** (`src/lib/printing-methods.ts`) — Screen (1 / 2 / full colour, with real colour-limit enforcement), UV, UV-DTF, Heat-Transfer (DTF, cloth), Engraving (substrate-driven look). Products expose only the methods they allow.
-
-**Pricing engine** (`src/lib/pricing.ts`) — the customer sees one final number; the breakdown stays admin-side. Total = product (`base × qty`) + customization (`setup + (unit + perElement × elements + card) × qty`) + VAT + delivery. Recomputed server-side so it can't be faked.
-
-**Production layers** —
-- Persistence: Prisma + Postgres (`prisma/`, `src/lib/db.ts`), admin auth, S3/R2 storage.
-- Render: print PDF with bleed + crop marks, spot-colour separations, CMYK, vectorize.
-- Image: background removal (remove.bg / IMG.LY / sharp), potrace vectorize.
-- Trust: server-side price + colour re-validation, upload screening + moderation hook.
-- 3D: `public/viewer3d.html` + `/preview3d`, GLB-ready.
-
-**API** (`src/app/api/*`) — products (list / by id / save), designs (save + validate), render, process-image, mockup, quote.
-
-**Integration** — `public/embed.js` mounts the editor on any product page; `INTEGRATION-SPEC` doc + `GO-LIVE.md` Stage 9 define the Krossover connection.
-
----
-
-## Map of the code
-
-```
-src/lib/
-  types.ts              domain model
-  printing-methods.ts   methods + colour rules + countColors/colorsAllowed
-  pricing.ts            computePrice + computeOrderTotals
-  seed-products.ts      sample products (per-product allowed methods)
-  db.ts                 Prisma client (falls back to seed)
-  storage.ts            S3/R2 asset storage (falls back to local)
-  auth.ts               admin bearer auth
-  bg-removal.ts         provider-pluggable + sharp fallback
-  vectorize.ts          potrace raster->SVG
-  screening.ts          upload size/type + moderation hook
-  validate.ts           server-side price + colour re-validation
-  print-pdf.ts          bleed + crop marks
-  separations.ts        one film per spot colour (screen)
-  cmyk.ts               RGB->CMYK via ghostscript
-  mockup.ts             AI mockup (gemini / openai / fal)
-  quote.ts              invoice-format quote PDF
-src/app/
-  page.tsx  editor/  admin/  preview3d/
-  api/products  api/designs  api/process-image  api/mockup  api/quote
-public/
-  editor.html  viewer3d.html  embed.js
-prisma/
-  schema.prisma  seed.ts
-GO-LIVE.md              step-by-step to production
-.env.local.template     every key, commented by stage
-```
-
----
-
-## Going live
-
-Read **`GO-LIVE.md`** — nine staged steps, each saying what it unlocks and whether it's required. Minimum to launch: database + storage + admin key + print output. Then deploy to Vercel and wire the three Krossover endpoints in the integration spec.
-
----
-
-## Honest boundaries
-
-- Runs on fallbacks everywhere, so it works before any key is added — and that also means each real provider (DB, storage, AI, moderation, CMYK) must be wired and tested before production.
-- The cylindrical preview and 3D are approximations until per-product warp maps / GLB models are added.
-- Every print size, colour separation, and price total needs your QA against real products before customers see them. The engine is built; the numbers are yours to sign off.
+- Dimensions are real-world **mm**; the Studio scales artwork proportionally to the
+  product and locks aspect ratio.
+- Prices are **global** (set once by the admin), not per-product-instance.
+- Rename: "Imprint Studio" is a plain text label — search/replace to rebrand if needed.
+- The Next.js app pages (if you use the full repo) still carry older "Krossover"
+  wordmarks in `src/app/*.tsx` (layout/page/manager/studio); change those strings
+  to "Imprint Studio" there — the HTML tools in this package are already neutral.

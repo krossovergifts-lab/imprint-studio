@@ -79,13 +79,36 @@ export interface ProductView {
   printAreas: PrintArea[];
 }
 
+/**
+ * A separately-printable PART of a product (the multi-area model).
+ * Examples: a crystal award's "Body" + "Base"; a bottle's "Body" (360) + "Lid".
+ * Each part has its own material, allowed methods, geometry and pricing — the
+ * customer may print any subset, and the order total sums every printed part.
+ */
+export interface ProductPart {
+  id: string;
+  label: string;                 // "Bottle body", "Bamboo lid", "Base"
+  material: Material;            // drives engrave look + method eligibility
+  type: "flat" | "cylindrical";
+  images: { front: string; left?: string; right?: string };
+  // real dimensions
+  realWidthMm?: number;          // flat
+  realHeightMm: number;
+  diameterMm?: number;           // cylindrical
+  dpi: number;
+  safeMarginMm: number;
+  bandPos?: number;              // cylindrical: where the print band sits (0..1)
+  methodIds: string[];           // allowed methods for THIS part
+}
+
 export interface Product {
   id: string;
   sku: string;
   name: string;
   type: ProductType;
   material: Material;
-  methods: ProductMethodConfig[]; // which printing methods this product allows
+  methods: ProductMethodConfig[]; // product-level allowed methods (single-area products)
+  parts?: ProductPart[];          // multi-area products: one entry per printable part
   views: ProductView[];
   createdAt?: string;
   updatedAt?: string;
@@ -102,6 +125,14 @@ export interface DesignElement {
 export interface PrintSelection {
   methodId: string;
   colors?: number; // spot methods only
+}
+
+/** One printed part in a customer's design (multi-area model). */
+export interface PartSelection {
+  partId: string;
+  methodId: string;
+  colors?: number;
+  elements: number;   // number of design elements placed on this part
 }
 
 export interface PriceBreakdown {

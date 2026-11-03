@@ -1,4 +1,4 @@
-<title>Krossover Product Manager</title>
+<title>Imprint Studio · Product Manager</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 :root{--bg:#eef2f8;--surface:#fff;--panel:#f6f9fd;--ink:#0f2748;--ink-soft:#3f5570;--muted:#7688a0;--border:#dce4ef;--border-strong:#c3d0e2;--accent:#2f6fed;--accent-ink:#fff;--ok:#1a9b73;--warn:#c67d10;--radius:9px;--ui:"Inter",system-ui,sans-serif;}
@@ -30,8 +30,22 @@ input#q{flex:1;min-width:180px}
 .meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-top:4px}
 .sku{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--muted)}
 .badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px}
-.b-ready{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
-.b-pending{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.cardact{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;padding-top:9px;border-top:1px solid var(--border)}
+.cardact .ko-prev{font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;text-decoration:none}
+.cardact .ko-prev:hover{text-decoration:underline}
+.cardact .ko-edit{font-size:11px;color:var(--muted)}
+.b-ready{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.b-pending{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.stat.click{cursor:pointer;transition:.12s}
+.stat.click:hover{border-color:var(--border-strong)}
+.stat.on{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
+.stat.on.ok-on{border-color:var(--ok);box-shadow:0 0 0 2px color-mix(in srgb,var(--ok) 30%,transparent)}
+.stat.on.warn-on{border-color:var(--warn);box-shadow:0 0 0 2px color-mix(in srgb,var(--warn) 30%,transparent)}
+.card{position:relative}
+.card.ko-ready{border-color:color-mix(in srgb,var(--ok) 45%,var(--border))}
+.card.ko-ready:before,.card.ko-pending:before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0}
+.card.ko-ready:before{background:var(--ok)}
+.card.ko-pending:before{background:var(--warn)}
 .price{font-weight:700;color:var(--ink)}
 .stock{font-size:11px}
 .more{text-align:center;margin:16px 0}
@@ -57,7 +71,7 @@ dialog::backdrop{background:rgba(8,18,34,.5)}
 
 <div class="wrap">
   <div class="top">
-    <div class="brand"><div class="logo">K</div><div><b>Krossover Product Manager</b><span>Admin · prepare each product for customization</span></div></div>
+    <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6a3 3 0 1 1 6 0c0 1.5-1.2 2.3-1.8 3.2-.4.6-.2 1.3.3 1.6l3.2 1.8c.6.3 1 .9 1 1.6V17H6v-1.8c0-.7.4-1.3 1-1.6l3.2-1.8c.5-.3.7-1 .3-1.6C9.2 8.3 9 7.5 9 6z"/><rect x="5" y="18" width="14" height="3" rx="1"/></svg></div><div><b>Imprint Studio</b><span>Product Manager · prepare each product for customization</span></div></div>
     <div class="sync"><span class="syncdot"></span><span id="syncLabel">Synced with website · auto-refresh on</span></div>
   </div>
 
@@ -104,14 +118,17 @@ function simRefresh(){
   renderStats(); apply(true);
 }
 function readyCount(){return Object.keys(setup).length;}
+let curFilter="all"; // all | ready | pending | instock
 function renderStats(){
   const inStock=CATALOG.filter(p=>p.stock>0).length;
-  $("stats").innerHTML=[
-    ["Products fetched",CATALOG.length],
-    ["Customization ready",readyCount()],
-    ["Setup pending",CATALOG.length-readyCount()],
-    ["In stock",inStock],
-  ].map(s=>`<div class="stat"><div class="n">${s[1].toLocaleString()}</div><div class="l">${s[0]}</div></div>`).join("");
+  const cards=[
+    ["all","Products fetched",CATALOG.length,""],
+    ["ready","Customization ready",readyCount(),"ok-on"],
+    ["pending","Setup pending",CATALOG.length-readyCount(),"warn-on"],
+    ["instock","In stock",inStock,""],
+  ];
+  $("stats").innerHTML=cards.map(c=>`<div class="stat click ${curFilter===c[0]?"on "+c[3]:""}" data-f="${c[0]}"><div class="n">${c[2].toLocaleString()}</div><div class="l">${c[1]}</div></div>`).join("");
+  $("stats").querySelectorAll("[data-f]").forEach(el=>el.onclick=()=>{curFilter=el.dataset.f;if($("statusSel"))$("statusSel").value=(curFilter==="instock"||curFilter==="all"?"all":curFilter);renderStats();apply();});
 }
 function renderChips(){
   const cats=["all",...Array.from(new Set(CATALOG.map(p=>p.category)))];
@@ -120,11 +137,12 @@ function renderChips(){
 }
 function apply(keepShown){
   const q=$("q").value.trim().toLowerCase();
-  const st=$("statusSel").value, sort=$("sortSel").value;
+  const sort=$("sortSel").value;
   filtered=CATALOG.filter(p=>{
     if(activeCat!=="all"&&p.category!==activeCat)return false;
-    if(st==="ready"&&!setup[p.sku])return false;
-    if(st==="pending"&&setup[p.sku])return false;
+    if(curFilter==="ready"&&!setup[p.sku])return false;
+    if(curFilter==="pending"&&setup[p.sku])return false;
+    if(curFilter==="instock"&&!(p.stock>0))return false;
     if(q&&!(p.name.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q)))return false;
     return true;
   });
@@ -136,13 +154,15 @@ function renderGrid(){
   $("grid").innerHTML=filtered.slice(0,shown).map(p=>{
     const col=CAT_COLORS[p.category]||"#5f5e5a", ready=!!setup[p.sku];
     const init=p.name.split(" ").slice(0,1)[0].slice(0,2).toUpperCase();
-    return `<div class="card" data-sku="${p.sku}">
+    return `<div class="card ${ready?"ko-ready":"ko-pending"}" data-sku="${p.sku}">
       <div class="thumb" style="background:color-mix(in srgb,${col} 16%,transparent);color:${col}">${init}</div>
       <h4>${p.name}</h4>
-      <div class="meta"><span class="sku">${p.sku}</span><span class="badge ${ready?"b-ready":"b-pending"}">${ready?"Ready":"Setup"}</span></div>
+      <div class="meta"><span class="sku">${p.sku}</span><span class="badge ${ready?"b-ready":"b-pending"}">${ready?"✓ Ready":"Needs setup"}</span></div>
       <div class="meta"><span class="price">AED ${p.price}</span><span class="stock" style="color:${p.stock>0?"var(--ok)":"var(--muted)"}">${p.stock>0?p.stock+" in stock":"Out of stock"}</span></div>
+      <div class="cardact">${ready?`<a class="ko-prev" data-prev="${p.sku}">Preview as customer ↗</a><span class="ko-edit">Edit setup</span>`:`<span class="ko-edit">Set up →</span>`}</div>
     </div>`;}).join("");
   $("grid").querySelectorAll("[data-sku]").forEach(c=>c.onclick=()=>openSetup(c.dataset.sku));
+  $("grid").querySelectorAll(".ko-prev").forEach(a=>a.onclick=e=>{e.stopPropagation();const sku=a.dataset.prev,p=CATALOG.find(x=>x.sku===sku)||{};window.open("/multi-area-studio.html?api=/api&sku="+encodeURIComponent(sku)+"&name="+encodeURIComponent(p.name||""),"_blank");});
   $("moreBtn").style.display=shown<filtered.length?"inline-flex":"none";
   $("moreBtn").textContent=`Load more (${filtered.length-shown} left)`;
 }
@@ -150,12 +170,12 @@ function openSetup(sku){
   const p=CATALOG.find(x=>x.sku===sku); if(!p)return;
   // Open the FULL setup editor for this product (upload images -> dimensions ->
   // mark print area -> methods -> pricing -> save). Pre-loads name + B2C price.
-  const url="/editor.html?api=/api&sku="+encodeURIComponent(sku)+"&name="+encodeURIComponent(p.name)+"&price="+encodeURIComponent(p.price);
+  const url="/part-setup.html?api=/api&sku="+encodeURIComponent(sku)+"&name="+encodeURIComponent(p.name)+"&price="+encodeURIComponent(p.price)+"&cat="+encodeURIComponent(p.category);
   const target=window.top&&window.top!==window?window.top:window;
   try{target.location.href=url;}catch(e){try{window.location.href=url;}catch(e2){}}
 }
 $("q").addEventListener("input",()=>apply());
-$("statusSel").addEventListener("change",()=>apply());
+$("statusSel").addEventListener("change",()=>{curFilter=$("statusSel").value;renderStats();apply();});
 $("sortSel").addEventListener("change",()=>apply());
 $("moreBtn").addEventListener("click",()=>{shown=Math.min(shown+PAGE,filtered.length);renderGrid();});
 load();

@@ -1,0 +1,258 @@
+<title>Imprint Studio · Part Setup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* ADMIN — define the printable PARTS of one product. Each part: image, area, material,
+   allowed methods, pricing. Customer later designs any subset; totals sum printed parts. */
+:root{--bg:#eef2f8;--surface:#fff;--panel:#f6f9fd;--ink:#0f2748;--ink-soft:#3f5570;--muted:#7688a0;--border:#dce4ef;--border-strong:#c3d0e2;--accent:#2f6fed;--accent-ink:#fff;--boundary:#e24b4a;--ok:#1a9b73;--warn:#c67d10;--danger:#d84a48;--radius:9px;--ui:"Inter",system-ui,sans-serif;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a1320;--surface:#111d2e;--panel:#0e1927;--ink:#e8eef8;--ink-soft:#b2c2d8;--muted:#7e92ac;--border:#213349;--border-strong:#2d445f;--accent:#4d8bf0;--accent-ink:#0a1320;--boundary:#ff5d5a;--ok:#3cce9f;--warn:#e0a53f;--danger:#ff6b68;color-scheme:dark;}}
+:root[data-theme="dark"]{--bg:#0a1320;--surface:#111d2e;--panel:#0e1927;--ink:#e8eef8;--ink-soft:#b2c2d8;--muted:#7e92ac;--border:#213349;--border-strong:#2d445f;--accent:#4d8bf0;--accent-ink:#0a1320;--boundary:#ff5d5a;--ok:#3cce9f;--warn:#e0a53f;--danger:#ff6b68;color-scheme:dark;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);line-height:1.5}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px;max-width:1180px;margin:0 auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.pinfo{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{width:30px;height:30px;border-radius:7px;background:var(--ink);color:var(--surface);display:flex;align-items:center;justify-content:center;font-weight:700;flex:0 0 auto}
+.pinfo b{font-size:15px}.pinfo span{font-size:12px;color:var(--muted);display:block}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+a.back{text-decoration:none;padding:8px 11px;border-radius:8px;border:1px solid var(--border-strong);color:var(--ink);font-size:13px}
+button{font-family:inherit;font-size:13px;font-weight:500;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--surface);color:var(--ink);padding:8px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:.12s}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.06);color:var(--accent-ink)}
+button.ghost{background:transparent}
+button.danger{border-color:var(--danger);color:var(--danger)}
+.work{display:grid;grid-template-columns:1fr 330px;gap:12px;align-items:start}
+@media(max-width:860px){.work{grid-template-columns:1fr}}
+.stagewrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;min-width:0}
+.parttabs{display:flex;gap:6px;margin-bottom:11px;flex-wrap:wrap;align-items:center}
+.ptab{font-size:12.5px;padding:7px 12px;border-radius:9px;border:1px solid var(--border-strong);background:var(--panel);cursor:pointer;color:var(--ink-soft);display:inline-flex;align-items:center;gap:7px}
+.ptab.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.ptab .pd{width:7px;height:7px;border-radius:50%;background:var(--muted)}.ptab .pd.set{background:var(--ok)}.ptab.on .pd.set{background:#fff}
+.ptab.add{border-style:dashed;color:var(--muted)}
+.ptab .xv{opacity:.6;margin-left:3px}.ptab .xv:hover{opacity:1}
+.stage{display:flex;align-items:center;justify-content:center;background:var(--panel);border-radius:10px;overflow:auto;min-height:300px}
+.caption{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
+.canvas-shell{line-height:0}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;min-width:0}
+.panel h3{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:12px 0 8px}
+.panel h3:first-child{margin-top:0}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:4px}
+input[type=text],input[type=number],select{width:100%;font-family:inherit;font-size:13px;padding:7px 9px;border-radius:7px;border:1px solid var(--border-strong);background:var(--panel);color:var(--ink)}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}
+.up{display:block;text-align:center;border:1px dashed var(--border-strong);border-radius:8px;padding:11px;font-size:12px;color:var(--ink-soft);cursor:pointer}
+.up.set{border-color:var(--ok);color:var(--ok)}
+.uprow{display:flex;gap:6px}.uprow .up{flex:1;padding:9px 6px}
+.mlist label{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);margin:3px 0}
+.mgroup{font-size:11px;color:var(--muted);margin:7px 0 2px}
+.note{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:8px}
+.divider{height:1px;background:var(--border);margin:12px 0}
+.priceedit{border:1px solid var(--border-strong);border-radius:9px;padding:8px 10px;margin-bottom:7px}
+.priceedit b{font-size:12px;display:block;margin-bottom:5px}
+.filechip{display:none}
+.hint{font-size:12px;color:var(--muted)}
+.pricebox{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:9px 11px;margin-top:6px;font-size:12.5px}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="pinfo"><a class="back" href="/manager">← Products</a><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6a3 3 0 1 1 6 0c0 1.5-1.2 2.3-1.8 3.2-.4.6-.2 1.3.3 1.6l3.2 1.8c.6.3 1 .9 1 1.6V17H6v-1.8c0-.7.4-1.3 1-1.6l3.2-1.8c.5-.3.7-1 .3-1.6C9.2 8.3 9 7.5 9 6z"/><rect x="5" y="18" width="14" height="3" rx="1"/></svg></div><div><b id="pName">Product</b><span id="pMeta">admin · define printable parts</span></div></div>
+    <div class="actions">
+      <button id="btnTheme" class="ghost" aria-label="Theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      <button class="primary" id="btnSave">Save customization setup</button>
+    </div>
+  </div>
+  <div class="work">
+    <div class="stagewrap">
+      <div class="parttabs" id="partTabs"></div>
+      <div class="stage" id="stage"><div class="canvas-shell"><canvas id="c"></canvas></div></div>
+      <div class="caption" id="caption">Upload the part image(s), drag the red box over the printable zone, size it.</div>
+    </div>
+    <div class="panel" id="inspector"></div>
+  </div>
+</div>
+
+<input type="file" id="fileImg" accept="image/*" class="filechip">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<script>
+const METHODS=[
+ {id:"screen1",group:"Screen Printing",label:"1 color",price:{setup:25,perUnit:3}},
+ {id:"screen2",group:"Screen Printing",label:"2 color",price:{setup:40,perUnit:5}},
+ {id:"screen3",group:"Screen Printing",label:"3+ colors",price:{setup:60,perUnit:8}},
+ {id:"uvflat",group:"UV Printing (Flat Bed)",label:"Full color",price:{perUnit:6,perCm2:0.07}},
+ {id:"uv360",group:"UV Printing (360 Rotary)",label:"Full color",price:{perUnit:8,perCm2:0.08}},
+ {id:"uvdtf",group:"UV DTF Sticker",label:"Full color",price:{perUnit:5,perCm2:0.06}},
+ {id:"dtf",group:"Heat Transfer (DTF)",label:"Full color",price:{perUnit:5,perCm2:0.05}},
+ {id:"subl",group:"Sublimation",label:"Full color",price:{perUnit:5,perCm2:0.05}},
+ {id:"laser",group:"Laser Engraving",label:"Mono",price:{setup:15,perUnit:4,perCm2:0.09}},
+];
+const methodById=id=>METHODS.find(m=>m.id===id);
+const MATERIALS=["metal","ceramic","glass","crystal","wood","cotton","leather","paper","stone","bamboo"];
+const CAT_DEFAULTS={"Office Supplies":["laser","screen1","screen2","uvflat","uvdtf"],"Technology":["laser","screen1","screen2","uvflat","uvdtf"],"Bag":["screen1","screen2","screen3","dtf"],"Eco Friendly":["screen1","screen2","uvdtf","dtf"],"Award and Trophy":["laser","uvflat","uvdtf"],"Drinkware":["laser","uv360","uvflat","uvdtf","subl","screen1"],"Promotional and Other Gifts":["screen1","screen2","uvflat","uvdtf","laser"]};
+const CUR="AED";
+const PLABEL={setup:"Setup",perUnit:"Per item",perCm2:"Per cm²"};
+
+const q=new URLSearchParams(location.search);
+const PROD={sku:q.get("sku")||"DEMO-01",name:q.get("name")||"Sample product",price:parseFloat(q.get("price"))||20,category:q.get("cat")||""};
+const defMethods=CAT_DEFAULTS[PROD.category]||["screen1","uvflat","uvdtf"];
+
+const $=id=>document.getElementById(id);
+const mm2px=(mm,dpi)=>Math.round(mm/25.4*dpi);
+function newPart(label){return {label:label||"Body",material:"metal",type:"flat",img:null,leftImg:null,rightImg:null,realW:80,realH:60,productH:200,dia:50,printH:80,dpi:300,safe:4,bandPos:0.55,methods:defMethods.slice(),area:null};}
+const state={parts:[newPart("Body")],pi:0,productBase:PROD.price,vatPct:5,delivery:0,perElement:2};
+// load existing saved setup if present
+try{const all=JSON.parse(localStorage.getItem("ko_setup")||"{}");const s=all[PROD.sku];if(s&&s.parts&&s.parts.length){state.parts=s.parts;state.productBase=s.productBase??PROD.price;state.vatPct=s.vatPct??5;state.delivery=s.delivery??0;state.perElement=s.perElement??2;if(s.prices)METHODS.forEach(m=>{if(s.prices[m.id])m.price=s.prices[m.id];});}}catch(e){}
+
+let canvas,boundaryObj=null;
+const cur=()=>state.parts[state.pi];
+const pw=()=>cur().type==="cylinder"?Math.round(Math.PI*cur().dia):cur().realW;
+const ph=()=>cur().type==="cylinder"?cur().printH:cur().realH;
+
+function initCanvas(){const st=$("stage");const w=Math.max(280,Math.min(680,st.clientWidth-2));const h=Math.round(w*0.62);canvas=new fabric.Canvas("c",{width:w,height:h,enableRetinaScaling:false,preserveObjectStacking:true});}
+function loadImg(u){return new Promise(r=>fabric.Image.fromURL(u,i=>r(i)));}
+function rmWhite(u){return new Promise(res=>{const im=new Image();im.onload=()=>{const c=document.createElement("canvas");c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext("2d");x.drawImage(im,0,0);let d;try{d=x.getImageData(0,0,c.width,c.height);}catch(e){res(u);return;}const p=d.data;for(let i=0;i<p.length;i+=4){if(p[i]>238&&p[i+1]>238&&p[i+2]>238)p[i+3]=0;}x.putImageData(d,0,0);res(c.toDataURL());};im.onerror=()=>res(u);im.src=u;});}
+function autoCrop(u){return new Promise(res=>{const im=new Image();im.onload=()=>{const c=document.createElement("canvas");c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext("2d");x.drawImage(im,0,0);let d;try{d=x.getImageData(0,0,c.width,c.height).data;}catch(e){res(u);return;}let a=c.width,b=c.height,mx=0,my=0,f=false;for(let y=0;y<c.height;y++)for(let xx=0;xx<c.width;xx++){if(d[(y*c.width+xx)*4+3]>14){f=true;if(xx<a)a=xx;if(xx>mx)mx=xx;if(y<b)b=y;if(y>my)my=y;}}if(!f){res(u);return;}const pd=2,sx=Math.max(0,a-pd),sy=Math.max(0,b-pd),bw=Math.min(c.width-sx,mx-a+1+pd*2),bh=Math.min(c.height-sy,my-b+1+pd*2);const o=document.createElement("canvas");o.width=bw;o.height=bh;o.getContext("2d").drawImage(c,sx,sy,bw,bh,0,0,bw,bh);res(o.toDataURL());};im.onerror=()=>res(u);im.src=u;});}
+
+let PB=null; // product bounds on canvas {top,left,h,w,ppm}
+async function build(){
+  canvas.clear();boundaryObj=null;PB=null;const p=cur();
+  const imgs=[];
+  if(p.type==="cylinder"){for(const u of [p.leftImg,p.img,p.rightImg]){if(u)imgs.push(await loadImg(await autoCrop(await rmWhite(u))));}}
+  else if(p.img){imgs.push(await loadImg(await autoCrop(await rmWhite(p.img))));}
+  if(imgs.length){
+    const tH=canvas.height*0.88,gap=8;
+    const total=imgs.reduce((s,im)=>s+im.width*(tH/im.height),0)+gap*(imgs.length-1);
+    const fit=total>canvas.width-6?(canvas.width-6)/total:1;
+    const drawnH=tH*fit, top=(canvas.height-drawnH)/2, x0=(canvas.width-total*fit)/2, stripW=total*fit; let x=x0;
+    imgs.forEach(im=>{const s=(tH/im.height)*fit;im.set({selectable:false,evented:false,scaleX:s,scaleY:s,left:x,top:top});im.koRole="product";canvas.add(im);im.sendToBack();x+=im.width*s+gap*fit;});
+
+    const iw0=imgs[0].width*imgs[0].scaleX;
+    PB={top,left:x0,h:drawnH,w:stripW,img0w:iw0};
+    placeBoundary(true);
+  }
+  canvas.requestRenderAll();renderTabs();renderInspector();updateCaption();
+}
+// Position/size the print-area box from the current real dimensions, using the
+// already-drawn product bounds (PB). Exact proportional math; no image reload.
+function placeBoundary(fresh){
+  if(!PB)return;const p=cur();const rW=pw(),rH=ph(),aspect=rW/rH,cyl=p.type==="cylinder";
+  let bw,bh,bl,bt;
+  if(cyl){
+    const ppm=PB.h/p.productH;                    // px per mm from product height (exact scale)
+    bh=Math.min(PB.h,p.printH*ppm);               // band height = printH proportion of product height
+    bw=PB.w; bl=PB.left;                          // spans the full 360 wrap strip
+    const cy=PB.top+PB.h*p.bandPos; bt=Math.max(PB.top,Math.min(PB.top+PB.h-bh,cy-bh/2));
+  } else if(p.area){                              // flat: keep saved box, enforce exact aspect
+    bw=p.area.width; bh=bw/aspect; const cx=p.area.left+p.area.width/2,cy=p.area.top+(p.area.height)/2;
+    bl=cx-bw/2; bt=cy-bh/2;
+  } else {                                        // flat default: aspect-correct, ~55% height, centred
+    bh=PB.h*0.55; bw=bh*aspect; if(bw>PB.img0w*0.9){bw=PB.img0w*0.9;bh=bw/aspect;}
+    bl=PB.left+(PB.w-bw)/2; bt=PB.top+(PB.h-bh)/2;
+  }
+  if(boundaryObj && !fresh){
+    boundaryObj.set({left:bl,top:bt,width:bw,height:bh,scaleX:1,scaleY:1});boundaryObj._aspect=aspect;boundaryObj.setCoords();
+    canvas.requestRenderAll();captureArea();return;
+  }
+  if(boundaryObj)canvas.remove(boundaryObj);
+  boundaryObj=new fabric.Rect({left:bl,top:bt,width:bw,height:bh,fill:"rgba(226,75,74,.1)",stroke:"#e24b4a",strokeWidth:1.6,strokeDashArray:[7,5],strokeUniform:true,
+    cornerColor:"#e24b4a",cornerStyle:"circle",transparentCorners:false,borderColor:"#e24b4a",rx:2,ry:2,lockRotation:true,
+    lockScalingX:cyl,lockScalingY:cyl,lockMovementX:cyl});
+  boundaryObj.koRole="boundary";boundaryObj._aspect=aspect;boundaryObj._cyl=cyl;
+  if(cyl)boundaryObj.setControlsVisibility({tl:false,tr:false,bl:false,br:false,ml:false,mr:false,mt:false,mb:false,mtr:false});
+  canvas.add(boundaryObj);canvas.setActiveObject(boundaryObj);
+  boundaryObj.on("scaling",()=>{const o=boundaryObj;if(o._cyl)return;const w=o.width*o.scaleX;o.scaleY=(w/o._aspect)/o.height;drawBandInfo();});
+  boundaryObj.on("moving",()=>{const o=boundaryObj;if(o._cyl){o.left=PB.left;o.top=Math.max(PB.top,Math.min(PB.top+PB.h-o.height,o.top));cur().bandPos=((o.top+o.height/2)-PB.top)/PB.h;}drawBandInfo();});
+  boundaryObj.on("modified",()=>{captureArea();drawBandInfo();});
+  captureArea();drawBandInfo();
+}
+function drawBandInfo(){
+  const p=cur(),o=boundaryObj;if(!o){$("caption").textContent="Upload this part's product image to start.";return;}
+  const rW=pw(),rH=ph(),areaCm=((rW/10)*(rH/10)).toFixed(0);
+  if(p.type==="cylinder"){
+    const pct=Math.round(p.printH/p.productH*100);
+    $("caption").innerHTML=`Logo band = <b>${p.printH} / ${p.productH} mm = ${pct}%</b> of product height · wrap <b>${rW} × ${rH} mm</b> (${areaCm} cm²). Drag the band up/down to position it.`;
+  } else {
+    const okRatio=Math.abs((o.width*o.scaleX)/(o.height*o.scaleY) - rW/rH) < 0.02;
+    $("caption").innerHTML=`Print area <b>${rW} × ${rH} mm</b> (${areaCm} cm²) · ratio ${okRatio?"<span style='color:var(--ok)'>matched ✓</span>":"locked to size"}. Drag to move, corners to resize — ratio stays exact.`;
+  }
+}
+function updateCaption(){drawBandInfo();}
+
+function renderTabs(){
+  const t=$("partTabs");t.innerHTML=state.parts.map((p,i)=>`<div class="ptab ${i===state.pi?"on":""}" data-i="${i}"><span class="pd ${p.area?"set":""}"></span>${p.label}${state.parts.length>1?` <span class="xv" data-x="${i}">×</span>`:""}</div>`).join("")+`<div class="ptab add" id="addPart">+ Add part</div>`;
+  t.querySelectorAll("[data-i]").forEach(el=>el.onclick=e=>{if(e.target.dataset.x!=null){removePart(+e.target.dataset.x);return;}switchPart(+el.dataset.i);});
+  $("addPart").onclick=addPart;
+}
+function switchPart(i){state.pi=i;build();}
+function addPart(){const name=prompt&&0;const labels=["Base","Lid","Back","Handle","Cap","Side"];const used=state.parts.map(p=>p.label);const lbl=labels.find(l=>!used.includes(l))||("Part "+(state.parts.length+1));state.parts.push(newPart(lbl));state.pi=state.parts.length-1;build();}
+function removePart(i){if(state.parts.length<=1)return;state.parts.splice(i,1);if(state.pi>=state.parts.length)state.pi=state.parts.length-1;build();}
+
+function renderInspector(){
+  const p=cur();const cyl=p.type==="cylinder";
+  $("inspector").innerHTML=`
+    <h3>Part</h3>
+    <div class="field"><label>Part name</label><input type="text" id="plabel" value="${p.label}"></div>
+    <div class="row"><div class="field"><label>Material</label><select id="pmat">${MATERIALS.map(m=>`<option ${p.material===m?"selected":""}>${m}</option>`).join("")}</select></div>
+      <div class="field"><label>Type</label><select id="ptype"><option value="flat" ${!cyl?"selected":""}>Flat</option><option value="cylinder" ${cyl?"selected":""}>Cylindrical 360°</option></select></div></div>
+    <h3>Product image${cyl?"s":""}</h3>
+    ${cyl?`<div class="uprow"><label class="up ${p.img?"set":""}" data-slot="front">${p.img?"Front ✓":"Front"}</label><label class="up ${p.leftImg?"set":""}" data-slot="left">${p.leftImg?"Left ✓":"Left"}</label><label class="up ${p.rightImg?"set":""}" data-slot="right">${p.rightImg?"Right ✓":"Right"}</label></div>`
+         :`<label class="up ${p.img?"set":""}" data-slot="front">${p.img?"✓ image set — replace":"⬆ Upload part image"}</label>`}
+    <h3>Dimensions</h3>
+    ${cyl?`<div class="row"><div class="field"><label>Product H (mm)</label><input type="number" id="dPH" min="1" value="${p.productH}"></div><div class="field"><label>Diameter (mm)</label><input type="number" id="dDia" min="1" value="${p.dia}"></div></div>
+          <div class="row"><div class="field"><label>Logo height (mm)</label><input type="number" id="dLH" min="1" max="${p.productH}" value="${p.printH}"></div><div class="field"><label>Perimeter (π×dia)</label><input type="number" id="dPerim" value="${(Math.PI*p.dia).toFixed(1)}" disabled></div></div>
+          <div class="hint" id="dimHint" style="margin:-2px 0 6px">Logo band = <b>${Math.round(p.printH/p.productH*100)}%</b> of product height · wrap area <b>${((Math.PI*p.dia/10)*(p.printH/10)).toFixed(0)} cm²</b></div>`
+         :`<div class="row"><div class="field"><label>Width (mm)</label><input type="number" id="dW" min="1" value="${p.realW}"></div><div class="field"><label>Height (mm)</label><input type="number" id="dH" min="1" value="${p.realH}"></div></div>
+          <div class="hint" id="dimHint" style="margin:-2px 0 6px">Print ratio <b>${(p.realW/p.realH).toFixed(2)} : 1</b> · area <b>${((p.realW/10)*(p.realH/10)).toFixed(0)} cm²</b> — the on-screen box stays locked to this ratio.</div>`}
+    <div class="row"><div class="field"><label>DPI</label><input type="number" id="dDpi" value="${p.dpi}"></div><div class="field"><label>Safe margin</label><input type="number" id="dSafe" value="${p.safe}"></div></div>
+    <h3>Allowed methods for this part</h3>
+    <div class="mlist" id="mlist">${groupMethods().map(g=>`<div class="mgroup">${g.group}</div>`+g.items.map(m=>`<label><input type="checkbox" data-m="${m.id}" ${p.methods.includes(m.id)?"checked":""}> ${m.label}</label>`).join("")).join("")}</div>
+    <div class="pricebox" id="partPrice"></div>
+    <div class="note">Each part can have a different material and its own allowed methods. Prices come from the global pricing settings — here you only choose which methods are possible for this product. The customer designs any part and pays the sum of printed parts.</div>`;
+  $("plabel").onchange=e=>{p.label=e.target.value||p.label;renderTabs();};
+  $("pmat").onchange=e=>{p.material=e.target.value;};
+  $("ptype").onchange=e=>{p.type=e.target.value;p.area=null;build();};
+  document.querySelectorAll("[data-slot]").forEach(l=>l.onclick=()=>{window.__slot=l.dataset.slot;$("fileImg").click();});
+  const liveHint=()=>{const el=$("dimHint");if(!el)return;if(p.type==="cylinder")el.innerHTML=`Logo band = <b>${Math.round(p.printH/p.productH*100)}%</b> of product height · wrap area <b>${((Math.PI*p.dia/10)*(p.printH/10)).toFixed(0)} cm²</b>`;else el.innerHTML=`Print ratio <b>${(p.realW/p.realH).toFixed(2)} : 1</b> · area <b>${((p.realW/10)*(p.realH/10)).toFixed(0)} cm²</b> — on-screen box locked to this ratio.`;};
+  const perim=()=>{const el=$("dPerim");if(el)el.value=(Math.PI*p.dia).toFixed(1);};
+  if($("dPH"))$("dPH").oninput=e=>{p.productH=Math.max(1,+e.target.value||1);if(p.printH>p.productH){p.printH=p.productH;if($("dLH"))$("dLH").value=p.printH;}placeBoundary(false);liveHint();};
+  if($("dDia"))$("dDia").oninput=e=>{p.dia=Math.max(1,+e.target.value||1);perim();placeBoundary(false);liveHint();};
+  if($("dLH"))$("dLH").oninput=e=>{p.printH=Math.max(1,Math.min(p.productH,+e.target.value||1));placeBoundary(false);liveHint();};
+  if($("dW"))$("dW").oninput=e=>{p.realW=Math.max(1,+e.target.value||1);reflowFlat(p);placeBoundary(false);liveHint();};
+  if($("dH"))$("dH").oninput=e=>{p.realH=Math.max(1,+e.target.value||1);reflowFlat(p);placeBoundary(false);liveHint();};
+  $("dDpi").oninput=e=>{p.dpi=Math.max(72,+e.target.value||300);};
+  $("dSafe").oninput=e=>{p.safe=Math.max(0,+e.target.value||0);};
+  document.querySelectorAll("[data-m]").forEach(c=>c.onchange=e=>{const id=e.target.dataset.m;if(e.target.checked){if(!p.methods.includes(id))p.methods.push(id);}else p.methods=p.methods.filter(x=>x!==id);partPrice();});
+  partPrice();
+}
+function groupMethods(){const g=[];METHODS.forEach(m=>{let x=g.find(y=>y.group===m.group);if(!x){x={group:m.group,items:[]};g.push(x);}x.items.push(m);});return g;}
+function partPrice(){const p=cur(),box=$("partPrice");if(!box)return;const area=(pw()/10)*(ph()/10);box.innerHTML=`<b style="font-size:11px;color:var(--muted)">This part · ${pw()}×${ph()}mm (${area.toFixed(0)}cm²)</b><div class="hint" style="margin-top:3px">${p.methods.length} method${p.methods.length===1?"":"s"} allowed — priced from global settings.</div>`;}
+function renderPriceEdit(){const box=$("priceEdit");if(!box)return;box.innerHTML=METHODS.map(m=>`<div class="priceedit"><b>${m.group} · ${m.label}</b><div class="row" style="flex-wrap:wrap;gap:6px">${Object.keys(m.price).map(k=>`<div style="flex:1;min-width:72px"><label style="font-size:10.5px;color:var(--muted)">${PLABEL[k]||k}</label><input type="number" step="0.01" data-pm="${m.id}" data-pk="${k}" value="${m.price[k]}" style="padding:5px 7px;font-size:12px"></div>`).join("")}</div></div>`).join("");box.querySelectorAll("[data-pm]").forEach(i=>i.onchange=e=>{const m=methodById(e.target.dataset.pm);if(m){m.price[e.target.dataset.pk]=+e.target.value||0;partPrice();}});}
+
+function reflowFlat(p){ // keep flat box centre & width, re-apply exact new aspect to height
+  if(p.type!=="flat"||!p.area)return;const asp=p.realW/p.realH;const cx=p.area.left+p.area.width/2,cy=p.area.top+p.area.height/2;
+  const w=p.area.width,h=w/asp;p.area={left:cx-w/2,top:cy-h/2,width:w,height:h};}
+function captureArea(){if(boundaryObj){cur().area={left:boundaryObj.left,top:boundaryObj.top,width:boundaryObj.width*boundaryObj.scaleX,height:boundaryObj.height*boundaryObj.scaleY};}}
+function saveSetup(){
+  captureArea();
+  const cfg={sku:PROD.sku,name:PROD.name,multiArea:true,
+    parts:state.parts.map(p=>({label:p.label,material:p.material,type:p.type,realW:p.realW,realH:p.realH,productH:p.productH,dia:p.dia,printH:p.printH,dpi:p.dpi,safe:p.safe,bandPos:p.bandPos,methods:p.methods.slice(),hasImages:!!(p.img||p.leftImg),area:p.area})),
+    prices:Object.fromEntries(METHODS.map(m=>[m.id,m.price])),
+    productBase:state.productBase,vatPct:state.vatPct,delivery:state.delivery,perElement:state.perElement};
+  try{const all=JSON.parse(localStorage.getItem("ko_setup")||"{}");all[PROD.sku]=cfg;localStorage.setItem("ko_setup",JSON.stringify(all));}catch(e){}
+  const base=new URLSearchParams(location.search).get("api");
+  if(base)fetch(base.replace(/\/$/,"")+"/products/"+encodeURIComponent(PROD.sku),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(cfg)}).catch(()=>{});
+  const b=$("btnSave");b.textContent="✓ Saved — returning…";setTimeout(()=>{location.href="/manager";},700);
+}
+
+function boot(){
+  initCanvas();$("pName").textContent=PROD.name;$("pMeta").textContent=`${PROD.sku} · admin · define printable parts · B2C AED ${PROD.price}`;
+  build();
+  $("fileImg").onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{const slot=window.__slot||"front";const p=cur();if(slot==="left")p.leftImg=ev.target.result;else if(slot==="right")p.rightImg=ev.target.result;else p.img=ev.target.result;build();};r.readAsDataURL(e.target.files[0]);}e.target.value="";};
+  $("btnSave").onclick=saveSetup;
+  $("btnTheme").onclick=()=>{const r=document.documentElement,c=r.getAttribute("data-theme"),d=c?c==="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.setAttribute("data-theme",d?"light":"dark");};
+  document.fonts&&document.fonts.ready.then(()=>canvas.requestRenderAll());
+}
+if(window.fabric)boot();else window.addEventListener("load",boot);
+</script>

@@ -16,8 +16,8 @@ export default function Home() {
           <p className="muted">All {count.toLocaleString()} Krossover products, fetched live. Set up each one&apos;s print image, area, allowed methods, and prices.</p>
         </Link>
         <Link className="card" href="/admin" style={{ textDecoration: "none", color: "inherit" }}>
-          <h2>Pricing &amp; methods →</h2>
-          <p className="muted">Per-product method toggles and editable price calculation.</p>
+          <h2>Global pricing &amp; methods →</h2>
+          <p className="muted">Set each printing method&apos;s price once. Products just select which methods they allow.</p>
         </Link>
       </div>
 
@@ -25,11 +25,7 @@ export default function Home() {
       <div className="grid">
         <Link className="card" href="/studio" style={{ textDecoration: "none", color: "inherit" }}>
           <h2>Design Studio →</h2>
-          <p className="muted">What the customer sees: a product pre-set-up, artwork tools only, one final price. No setup, no re-define area.</p>
-        </Link>
-        <Link className="card" href="/preview3d" style={{ textDecoration: "none", color: "inherit" }}>
-          <h2>3D Preview →</h2>
-          <p className="muted">Rotatable product with the artwork mapped onto the body.</p>
+          <p className="muted">One studio that adapts to each product&apos;s setup — flat, 360°, or multiple parts. Artwork tools only, realtime quantity, one final price.</p>
         </Link>
       </div>
 

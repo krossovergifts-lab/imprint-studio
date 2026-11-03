@@ -64,6 +64,51 @@ export interface OrderTotals {
  * the customer only sees product + customization + VAT + delivery = grand.
  * Example: product 20 × 10 = 200, printing 15/item × 10 = 150 → sub 350 (+VAT +delivery).
  */
+export interface PartCost {
+  partId: string;
+  methodId: string;
+  setup: number;
+  unit: number;
+  total: number; // setup + unit × qty
+}
+
+/**
+ * Multi-area order total — sums every PRINTED part (parts with 0 elements are free).
+ * Each part is priced by ITS method + area + colours + elements, then × qty.
+ * Example: bottle body (UV 360) + bamboo lid (laser) → bodyCost + lidCost, summed.
+ */
+export function computeMultiAreaTotals(
+  parts: Array<{
+    partId: string;
+    method: PrintingMethod;
+    pricing: PricingModel;
+    areaCm2: number;
+    colors?: number;
+    elements: number;
+  }>,
+  opts: { productBase: number; qty: number; perElement?: number; cardPrice?: number; vatPct?: number; delivery?: number; currency?: string }
+): { currency: string; qty: number; productTotal: number; partCosts: PartCost[]; printTotal: number; card: number; sub: number; vat: number; delivery: number; grand: number } {
+  const r = (n: number) => Math.round(n * 100) / 100;
+  const qty = Math.max(1, opts.qty);
+  const partCosts: PartCost[] = [];
+  for (const p of parts) {
+    if (!p.elements) continue; // not printed → not charged
+    let unit = p.pricing.perUnit ?? 0;
+    if (p.method.colorModel === "spot") unit += (p.pricing.perColor ?? 0) * (p.colors ?? 1);
+    if (p.pricing.perCm2) unit += p.pricing.perCm2 * p.areaCm2;
+    unit += (opts.perElement ?? 0) * p.elements;
+    const setup = p.pricing.setup ?? 0;
+    partCosts.push({ partId: p.partId, methodId: p.method.id, setup: r(setup), unit: r(unit), total: r(setup + unit * qty) });
+  }
+  const printTotal = r(partCosts.reduce((s, c) => s + c.total, 0));
+  const card = r((opts.cardPrice ?? 0) * qty);
+  const productTotal = r(opts.productBase * qty);
+  const sub = r(productTotal + printTotal + card);
+  const vat = r((sub * (opts.vatPct ?? 0)) / 100);
+  const delivery = r(opts.delivery ?? 0);
+  return { currency: opts.currency ?? DEFAULT_CURRENCY, qty, productTotal, partCosts, printTotal, card, sub, vat, delivery, grand: r(sub + vat + delivery) };
+}
+
 export function computeOrderTotals(
   method: PrintingMethod,
   pricing: PricingModel,

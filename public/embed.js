@@ -1,59 +1,50 @@
-/**
- * Krossover Studio — product-page embed loader
+/* Imprint Studio — product-page embed
+ * Drop one <script> + one <div> on any product page. The Studio loads the
+ * product by SKU, lets the customer design, and hands a cart payload back.
  *
- * Drop this on any product page across any Krossover site. It mounts the Design
- * Studio editor for one product and hands the saved design back to your cart.
- * The editor itself is a self-contained widget (iframe or web component) hosted
- * once; this loader just wires it to the page's product and cart.
+ *   <div id="imprint-studio" data-sku="11604BK"></div>
+ *   <script src="https://studio.yourdomain.com/embed.js"
+ *           data-base="https://studio.yourdomain.com"
+ *           data-api="https://studio.yourdomain.com/api"></script>
  *
- * Usage on a product page:
- *   <div id="ko-studio" data-product-id="SKU123"></div>
- *   <script src="https://studio.kross-over.net/embed.js"></script>
- *   <script>
- *     KrossoverStudio.mount('#ko-studio', {
- *       productId: document.querySelector('#ko-studio').dataset.productId,
- *       apiBase: 'https://api.kross-over.net/studio/v1',
- *       locale: 'en',            // or 'ar' for an Arabic/RTL UI
- *       onAddToCart: (payload) => myCart.addCustomLine(payload)
- *     });
- *   </script>
+ * When the customer clicks "Add to cart", this script receives the design +
+ * pricing and calls window.ImprintStudio.onAddToCart(payload). Wire that to
+ * your cart. VAT is NOT in the payload total — your checkout applies it.
  */
-(function (w) {
-  var EDITOR_URL = "https://studio.kross-over.net/editor"; // hosted editor widget
+(function () {
+  var s = document.currentScript;
+  var BASE = (s && s.getAttribute("data-base")) || "";
+  var API  = (s && s.getAttribute("data-api"))  || (BASE ? BASE + "/api" : "/api");
+  var MOUNT = (s && s.getAttribute("data-mount")) || "imprint-studio";
 
-  function mount(selector, opts) {
-    var host = typeof selector === "string" ? document.querySelector(selector) : selector;
-    if (!host) throw new Error("KrossoverStudio: mount target not found");
+  function mount() {
+    var host = document.getElementById(MOUNT);
+    if (!host) return;
+    var sku = host.getAttribute("data-sku");
+    if (!sku) { console.warn("[Imprint] #" + MOUNT + " has no data-sku"); return; }
 
-    var qs = new URLSearchParams({
-      productId: opts.productId,
-      apiBase: opts.apiBase,
-      locale: opts.locale || "en"
-    });
+    var iframe = document.createElement("iframe");
+    iframe.src = BASE + "/multi-area-studio.html?api=" + encodeURIComponent(API) +
+                 "&sku=" + encodeURIComponent(sku);
+    iframe.style.cssText = "width:100%;min-height:720px;border:0;border-radius:12px;";
+    iframe.setAttribute("allow", "clipboard-write");
+    iframe.setAttribute("title", "Personalize this product");
+    host.innerHTML = "";
+    host.appendChild(iframe);
 
-    var frame = document.createElement("iframe");
-    frame.src = EDITOR_URL + "?" + qs.toString();
-    frame.style.cssText = "width:100%;border:0;border-radius:14px;min-height:640px";
-    frame.allow = "clipboard-write";
-    host.appendChild(frame);
-
-    // The editor posts messages up to the page. Verify origin in production.
-    function onMsg(e) {
-      if (e.source !== frame.contentWindow) return;
-      var m = e.data || {};
-      if (m.type === "ko:add-to-cart" && opts.onAddToCart) opts.onAddToCart(m.payload);
-      if (m.type === "ko:resize" && m.height) frame.style.height = m.height + "px";
-      if (m.type === "ko:price" && opts.onPrice) opts.onPrice(m.price);
-    }
-    w.addEventListener("message", onMsg);
-
-    return {
-      destroy: function () {
-        w.removeEventListener("message", onMsg);
-        frame.remove();
+    window.addEventListener("message", function (e) {
+      var d = e.data || {};
+      if (d.type !== "IMPRINT_ADD_TO_CART") return;
+      var p = d.payload || {};
+      if (window.ImprintStudio && typeof window.ImprintStudio.onAddToCart === "function") {
+        window.ImprintStudio.onAddToCart(p);     // <-- your cart integration
+      } else {
+        console.log("[Imprint] add_to_cart (no handler set):", p);
       }
-    };
+    });
   }
 
-  w.KrossoverStudio = { mount: mount };
-})(window);
+  window.ImprintStudio = window.ImprintStudio || {};
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
+  else mount();
+})();

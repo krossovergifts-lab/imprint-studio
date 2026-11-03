@@ -14,12 +14,12 @@ export const SEED_PRODUCTS: Product[] = [
     type: "cylindrical",
     material: "ceramic",
     methods: [
-      { methodId: "uv", enabled: true },
+      { methodId: "uvflat", enabled: true },
       { methodId: "uvdtf", enabled: true },
       { methodId: "screen1", enabled: true },
       { methodId: "screen2", enabled: true },
-      { methodId: "screenfull", enabled: true },
-      { methodId: "engrave", enabled: false }, // can't engrave glazed ceramic
+      { methodId: "screen3", enabled: true },
+      { methodId: "laser", enabled: false }, // can't engrave glazed ceramic
     ],
     views: [
       {
@@ -42,12 +42,12 @@ export const SEED_PRODUCTS: Product[] = [
     type: "flat",
     material: "crystal",
     methods: [
-      { methodId: "engrave", enabled: true },  // frosted glass engrave
-      { methodId: "uv", enabled: true },
+      { methodId: "laser", enabled: true },  // frosted glass engrave
+      { methodId: "uvflat", enabled: true },
       { methodId: "uvdtf", enabled: true },
       { methodId: "screen1", enabled: true },
       { methodId: "screen2", enabled: true },
-      { methodId: "screenfull", enabled: true },
+      { methodId: "screen3", enabled: true },
     ],
     views: [
       {
@@ -67,8 +67,8 @@ export const SEED_PRODUCTS: Product[] = [
     type: "flat",
     material: "wood",
     methods: [
-      { methodId: "engrave", enabled: true },  // burn brown
-      { methodId: "uv", enabled: true },
+      { methodId: "laser", enabled: true },  // burn brown
+      { methodId: "uvflat", enabled: true },
     ],
     views: [
       {
