@@ -1,0 +1,33 @@
+{
+  "name": "imprint-studio-desktop",
+  "productName": "Imprint Studio",
+  "version": "1.0.0",
+  "description": "Imprint Studio — admin desktop app (Product Manager & Part Setup)",
+  "main": "main.js",
+  "author": "Krossover Gifts",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.krossovergifts.imprintstudio",
+    "productName": "Imprint Studio",
+    "files": ["main.js", "preload.js", "icon.ico"],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Imprint Studio"
+    }
+  }
+}
