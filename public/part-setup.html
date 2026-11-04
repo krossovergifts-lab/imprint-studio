@@ -77,7 +77,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script>
-const METHODS=[
+const DEFAULT_METHODS=[
  {id:"screen1",group:"Screen Printing",label:"1 color",price:{setup:25,perUnit:3}},
  {id:"screen2",group:"Screen Printing",label:"2 color",price:{setup:40,perUnit:5}},
  {id:"screen3",group:"Screen Printing",label:"3+ colors",price:{setup:60,perUnit:8}},
@@ -88,6 +88,9 @@ const METHODS=[
  {id:"subl",group:"Sublimation",label:"Full color",price:{perUnit:5,perCm2:0.05}},
  {id:"laser",group:"Laser Engraving",label:"Mono",price:{setup:15,perUnit:4,perCm2:0.09}},
 ];
+// methods come from the Pricing & Methods tool (ko_methods) so admin-added methods are assignable here too
+function loadMethods(){try{const s=localStorage.getItem("ko_methods");if(s){const a=JSON.parse(s);if(Array.isArray(a)&&a.length)return a;}}catch(e){}return DEFAULT_METHODS;}
+const METHODS=loadMethods();
 const methodById=id=>METHODS.find(m=>m.id===id);
 const MATERIALS=["metal","ceramic","glass","crystal","wood","cotton","leather","paper","stone","bamboo"];
 const CAT_DEFAULTS={"Office Supplies":["laser","screen1","screen2","uvflat","uvdtf"],"Technology":["laser","screen1","screen2","uvflat","uvdtf"],"Bag":["screen1","screen2","screen3","dtf"],"Eco Friendly":["screen1","screen2","uvdtf","dtf"],"Award and Trophy":["laser","uvflat","uvdtf"],"Drinkware":["laser","uv360","uvflat","uvdtf","subl","screen1"],"Promotional and Other Gifts":["screen1","screen2","uvflat","uvdtf","laser"]};

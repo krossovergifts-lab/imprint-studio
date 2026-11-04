@@ -1,0 +1,129 @@
+<!doctype html><html lang="en" data-theme="light"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Imprint Studio · Pricing & Methods</title>
+<style>
+:root{--bg:#eef2f8;--surface:#fff;--panel:#f6f9fd;--ink:#0f2748;--ink-soft:#3f5570;--muted:#7688a0;--border:#dce4ef;--border-strong:#c3d0e2;--accent:#2f6fed;--accent-ink:#fff;--ok:#1a9b73;--danger:#d64545;--radius:10px;--ui:"Inter",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:14px}
+.top{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--ink);color:#fff;display:grid;place-items:center}
+.brand b{display:block;font-size:15px}.brand span{font-size:11.5px;color:var(--muted)}
+.back{margin-left:auto;font-size:13px;color:var(--ink-soft);text-decoration:none;border:1px solid var(--border-strong);padding:7px 12px;border-radius:8px}
+.back:hover{border-color:var(--accent);color:var(--accent)}
+.primary{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:9px 16px;font-weight:600;cursor:pointer;font-size:13px}
+.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--border-strong);border-radius:8px;padding:8px 13px;font-weight:600;cursor:pointer;font-size:13px}
+.ghost:hover{border-color:var(--accent);color:var(--accent)}
+.wrap{max-width:1000px;margin:22px auto;padding:0 20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+h2{font-size:16px;margin:0 0 4px}.sub{color:var(--muted);font-size:12.5px;margin:0 0 14px}
+.row{display:flex;gap:14px;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:5px;min-width:120px}
+.field.grow{flex:1}
+label{font-size:11.5px;color:var(--ink-soft);font-weight:600}
+input,select{font-family:var(--ui);font-size:13px;padding:8px 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--panel);color:var(--ink);width:100%}
+input:focus,select:focus{outline:2px solid color-mix(in srgb,var(--accent) 35%,transparent);border-color:var(--accent)}
+.mcard{border:1px solid var(--border);border-radius:var(--radius);padding:15px;margin-bottom:12px;background:var(--surface)}
+.mhead{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.mhead .pill{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:100px;background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
+.mhead .pill.eff{background:var(--panel);color:var(--ink-soft);border:1px solid var(--border-strong)}
+.rm{margin-left:auto;background:none;border:0;color:var(--muted);cursor:pointer;font-size:18px;line-height:1}
+.rm:hover{color:var(--danger)}
+.sizes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:10px}
+.sizes .field label b{color:var(--accent)}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+.bar{display:flex;gap:10px;align-items:center;margin-top:6px}
+.saved{color:var(--ok);font-size:13px;font-weight:600;opacity:0;transition:opacity .2s}
+.saved.on{opacity:1}
+.note{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--ink-soft);margin-top:4px}
+</style></head>
+<body>
+<div class="top">
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6a3 3 0 1 1 6 0c0 1.5-1.2 2.3-1.8 3.2-.4.6-.2 1.3.3 1.6l3.2 1.8c.6.3 1 .9 1 1.6V17H6v-1.8c0-.7.4-1.3 1-1.6l3.2-1.8c.5-.3.7-1 .3-1.6C9.2 8.3 9 7.5 9 6z"/><rect x="5" y="18" width="14" height="3" rx="1"/></svg></div><div><b>Imprint Studio</b><span>Pricing &amp; Methods · set once, applies to every product</span></div></div>
+  <a class="back" href="/manager">← Products</a>
+  <button class="primary" id="btnSave">Save</button>
+  <span class="saved" id="saved">✓ Saved</span>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <h2>Store commercials</h2>
+    <p class="sub">Charged on every product. Product price comes from your catalogue (B2C) per SKU.</p>
+    <div class="row">
+      <div class="field"><label>Per element (AED)</label><input type="number" id="cPerEl" min="0" step="0.5"></div>
+      <div class="field"><label>Delivery (AED)</label><input type="number" id="cDelivery" min="0" step="1"></div>
+    </div>
+    <div class="note">VAT is <b>not</b> set here — it's added by your store at checkout, in the cart. The Design Studio shows the printing + product total excluding VAT.</div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><h2 style="margin:0">Printing methods</h2><span class="pill" id="mCount" style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:100px;background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)"></span></div>
+    <p class="sub">Each method has a colour model, an effect, a one-time setup, and three size prices — Small, Medium, Big (per piece). Add as many as you need.</p>
+    <div id="methodList"></div>
+    <div class="bar"><button class="ghost" id="btnAdd">+ Add printing method</button></div>
+  </div>
+</div>
+
+<script>
+const COLORS=[["spot1","Screen — 1 colour"],["spot2","Screen — 2 colour"],["spot3","Screen — 3+ colours"],["mono","Mono (single tone)"],["full","Full colour"]];
+const EFFECTS=[["ink","Ink / print (screen)"],["uv","UV / digital (clean)"],["engrave","Engrave / laser"],["emboss","Emboss (raised)"],["deboss","Deboss (pressed)"],["doming","Epoxy doming"],["foil","Foil / metallic"],["other","Other"]];
+const DEFAULT_METHODS=[
+ {id:"screen1",group:"Screen Printing",label:"1 color",color:"spot1",effect:"ink",setup:25,sizes:{S:2,M:3,L:4}},
+ {id:"screen2",group:"Screen Printing",label:"2 color",color:"spot2",effect:"ink",setup:40,sizes:{S:4,M:5,L:7}},
+ {id:"screen3",group:"Screen Printing",label:"3+ colors",color:"spot3",effect:"ink",setup:60,sizes:{S:6,M:8,L:11}},
+ {id:"uvflat",group:"UV Printing (Flat Bed)",label:"Full color",color:"full",effect:"uv",setup:0,sizes:{S:4,M:6,L:9}},
+ {id:"uv360",group:"UV Printing (360 Rotary)",label:"Full color",color:"full",effect:"uv",setup:0,sizes:{S:6,M:8,L:12}},
+ {id:"uvdtf",group:"UV DTF Sticker",label:"Full color",color:"full",effect:"uv",setup:0,sizes:{S:3,M:5,L:8}},
+ {id:"dtf",group:"Heat Transfer (DTF)",label:"Full color",color:"full",effect:"uv",setup:0,sizes:{S:3,M:5,L:8}},
+ {id:"subl",group:"Sublimation",label:"Full color",color:"full",effect:"uv",setup:0,sizes:{S:3,M:5,L:8}},
+ {id:"laser",group:"Laser Engraving",label:"Mono",color:"mono",effect:"engrave",setup:15,sizes:{S:3,M:4,L:6}},
+];
+const $=id=>document.getElementById(id);
+let methods=load(), commercials=loadCom();
+function load(){try{const s=localStorage.getItem("ko_methods");if(s){const a=JSON.parse(s);if(Array.isArray(a)&&a.length)return a;}}catch(e){}return JSON.parse(JSON.stringify(DEFAULT_METHODS));}
+function loadCom(){try{const c=JSON.parse(localStorage.getItem("ko_commercials")||"null");if(c)return c;}catch(e){}return {perElement:2,delivery:0};}
+function slug(s){return (s||"method").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||("m"+Date.now());}
+function uid(base){let id=slug(base),n=1;const ids=methods.map(m=>m.id);while(ids.includes(id)){id=slug(base)+"-"+(++n);}return id;}
+
+function render(){
+  $("cPerEl").value=commercials.perElement;$("cDelivery").value=commercials.delivery;
+  $("mCount").textContent=methods.length+" method"+(methods.length!==1?"s":"");
+  const box=$("methodList");box.innerHTML="";
+  methods.forEach((m,i)=>{
+    m.sizes=m.sizes||{S:0,M:0,L:0};
+    const el=document.createElement("div");el.className="mcard";
+    el.innerHTML=`
+      <div class="mhead"><span class="pill">${(COLORS.find(c=>c[0]===m.color)||["","full"])[1]||m.color}</span><span class="pill eff">${(EFFECTS.find(e=>e[0]===m.effect)||["",""])[1]||m.effect}</span><button class="rm" title="Remove" data-rm="${i}">×</button></div>
+      <div class="row">
+        <div class="field grow"><label>Method group</label><input data-k="group" data-i="${i}" value="${(m.group||"").replace(/"/g,'&quot;')}" placeholder="e.g. Laser Engraving (360 Rotary)"></div>
+        <div class="field grow"><label>Variant label</label><input data-k="label" data-i="${i}" value="${(m.label||"").replace(/"/g,'&quot;')}" placeholder="e.g. Full color / 1 color / Mono"></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <div class="field grow"><label>Colour model</label><select data-k="color" data-i="${i}">${COLORS.map(c=>`<option value="${c[0]}" ${m.color===c[0]?"selected":""}>${c[1]}</option>`).join("")}</select></div>
+        <div class="field grow"><label>Effect (how it looks on the product)</label><select data-k="effect" data-i="${i}">${EFFECTS.map(e=>`<option value="${e[0]}" ${m.effect===e[0]?"selected":""}>${e[1]}</option>`).join("")}</select></div>
+        <div class="field"><label>Setup (AED, one-time)</label><input type="number" min="0" step="1" data-k="setup" data-i="${i}" value="${m.setup||0}"></div>
+      </div>
+      <div class="sizes">
+        <div class="field"><label><b>Small</b> — per piece (AED)</label><input type="number" min="0" step="0.5" data-sz="S" data-i="${i}" value="${m.sizes.S||0}"></div>
+        <div class="field"><label><b>Medium</b> — per piece (AED)</label><input type="number" min="0" step="0.5" data-sz="M" data-i="${i}" value="${m.sizes.M||0}"></div>
+        <div class="field"><label><b>Big</b> — per piece (AED)</label><input type="number" min="0" step="0.5" data-sz="L" data-i="${i}" value="${m.sizes.L||0}"></div>
+      </div>`;
+    box.appendChild(el);
+  });
+  box.querySelectorAll("[data-k]").forEach(inp=>inp.oninput=e=>{const i=+e.target.dataset.i,k=e.target.dataset.k;methods[i][k]=(k==="setup")?(+e.target.value||0):e.target.value;if(k==="color"||k==="effect"){/* refresh pills */render();}});
+  box.querySelectorAll("[data-sz]").forEach(inp=>inp.oninput=e=>{const i=+e.target.dataset.i,sz=e.target.dataset.sz;methods[i].sizes[sz]=+e.target.value||0;});
+  box.querySelectorAll("[data-rm]").forEach(btn=>btn.onclick=e=>{const i=+btn.dataset.rm;if(confirm("Remove “"+(methods[i].group||"")+" "+(methods[i].label||"")+"”?")){methods.splice(i,1);render();}});
+}
+$("btnAdd").onclick=()=>{methods.push({id:uid("method"),group:"New Method",label:"Full color",color:"full",effect:"uv",setup:0,sizes:{S:0,M:0,L:0}});render();window.scrollTo(0,document.body.scrollHeight);};
+$("cPerEl").oninput=e=>commercials.perElement=+e.target.value||0;
+$("cDelivery").oninput=e=>commercials.delivery=+e.target.value||0;
+$("btnSave").onclick=()=>{
+  // assign ids to any new/renamed method without one, ensure uniqueness
+  const seen={};methods.forEach(m=>{if(!m.id||seen[m.id]){m.id=uid((m.group||"m")+"-"+(m.label||""));}seen[m.id]=1;});
+  try{localStorage.setItem("ko_methods",JSON.stringify(methods));localStorage.setItem("ko_commercials",JSON.stringify(commercials));}catch(e){}
+  const base=new URLSearchParams(location.search).get("api");
+  if(base){fetch(base.replace(/\/$/,"")+"/methods",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({methods,commercials})}).catch(()=>{});}
+  const s=$("saved");s.classList.add("on");setTimeout(()=>s.classList.remove("on"),1600);
+};
+render();
+</script></body></html>
