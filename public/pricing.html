@@ -50,8 +50,8 @@ input:focus,select:focus{outline:2px solid color-mix(in srgb,var(--accent) 35%,t
     <h2>Store commercials</h2>
     <p class="sub">Charged on every product. Product price comes from your catalogue (B2C) per SKU.</p>
     <div class="row">
-      <div class="field"><label>Per element (AED)</label><input type="number" id="cPerEl" min="0" step="0.5"></div>
-      <div class="field"><label>Delivery (AED)</label><input type="number" id="cDelivery" min="0" step="1"></div>
+      <div class="field"><label>Per element (AED)</label><input type="text" inputmode="decimal" id="cPerEl"></div>
+      <div class="field"><label>Delivery (AED)</label><input type="text" inputmode="decimal" id="cDelivery"></div>
     </div>
     <div class="note">VAT is <b>not</b> set here — it's added by your store at checkout, in the cart. The Design Studio shows the printing + product total excluding VAT.</div>
   </div>
@@ -101,22 +101,24 @@ function render(){
       <div class="row" style="margin-top:12px">
         <div class="field grow"><label>Colour model</label><select data-k="color" data-i="${i}">${COLORS.map(c=>`<option value="${c[0]}" ${m.color===c[0]?"selected":""}>${c[1]}</option>`).join("")}</select></div>
         <div class="field grow"><label>Effect (how it looks on the product)</label><select data-k="effect" data-i="${i}">${EFFECTS.map(e=>`<option value="${e[0]}" ${m.effect===e[0]?"selected":""}>${e[1]}</option>`).join("")}</select></div>
-        <div class="field"><label>Setup (AED, one-time)</label><input type="number" min="0" step="1" data-k="setup" data-i="${i}" value="${m.setup||0}"></div>
+        <div class="field"><label>Setup (AED, one-time)</label><input type="text" inputmode="decimal" data-k="setup" data-i="${i}" value="${m.setup||0}"></div>
       </div>
       <div class="sizes">
-        <div class="field"><label><b>Small</b> — per piece (AED)</label><input type="number" min="0" step="0.5" data-sz="S" data-i="${i}" value="${m.sizes.S||0}"></div>
-        <div class="field"><label><b>Medium</b> — per piece (AED)</label><input type="number" min="0" step="0.5" data-sz="M" data-i="${i}" value="${m.sizes.M||0}"></div>
-        <div class="field"><label><b>Big</b> — per piece (AED)</label><input type="number" min="0" step="0.5" data-sz="L" data-i="${i}" value="${m.sizes.L||0}"></div>
+        <div class="field"><label><b>Small</b> — per piece (AED)</label><input type="text" inputmode="decimal" data-sz="S" data-i="${i}" value="${m.sizes.S||0}"></div>
+        <div class="field"><label><b>Medium</b> — per piece (AED)</label><input type="text" inputmode="decimal" data-sz="M" data-i="${i}" value="${m.sizes.M||0}"></div>
+        <div class="field"><label><b>Big</b> — per piece (AED)</label><input type="text" inputmode="decimal" data-sz="L" data-i="${i}" value="${m.sizes.L||0}"></div>
       </div>`;
     box.appendChild(el);
   });
-  box.querySelectorAll("[data-k]").forEach(inp=>inp.oninput=e=>{const i=+e.target.dataset.i,k=e.target.dataset.k;methods[i][k]=(k==="setup")?(+e.target.value||0):e.target.value;if(k==="color"||k==="effect"){/* refresh pills */render();}});
-  box.querySelectorAll("[data-sz]").forEach(inp=>inp.oninput=e=>{const i=+e.target.dataset.i,sz=e.target.dataset.sz;methods[i].sizes[sz]=+e.target.value||0;});
+  box.querySelectorAll("[data-k]").forEach(inp=>{inp.oninput=e=>{const i=+e.target.dataset.i,k=e.target.dataset.k;methods[i][k]=(k==="setup")?(+e.target.value||0):e.target.value;if(k==="color"||k==="effect"){render();}};if(inp.dataset.k==="setup")inp.onchange=e=>{e.target.value=methods[+e.target.dataset.i].setup;};});
+  box.querySelectorAll("[data-sz]").forEach(inp=>{inp.oninput=e=>{const i=+e.target.dataset.i,sz=e.target.dataset.sz;methods[i].sizes[sz]=+e.target.value||0;};inp.onchange=e=>{e.target.value=methods[+e.target.dataset.i].sizes[e.target.dataset.sz];};});
   box.querySelectorAll("[data-rm]").forEach(btn=>btn.onclick=e=>{const i=+btn.dataset.rm;if(confirm("Remove “"+(methods[i].group||"")+" "+(methods[i].label||"")+"”?")){methods.splice(i,1);render();}});
 }
 $("btnAdd").onclick=()=>{methods.push({id:uid("method"),group:"New Method",label:"Full color",color:"full",effect:"uv",setup:0,sizes:{S:0,M:0,L:0}});render();window.scrollTo(0,document.body.scrollHeight);};
 $("cPerEl").oninput=e=>commercials.perElement=+e.target.value||0;
+$("cPerEl").onchange=e=>e.target.value=commercials.perElement;
 $("cDelivery").oninput=e=>commercials.delivery=+e.target.value||0;
+$("cDelivery").onchange=e=>e.target.value=commercials.delivery;
 $("btnSave").onclick=()=>{
   // assign ids to any new/renamed method without one, ensure uniqueness
   const seen={};methods.forEach(m=>{if(!m.id||seen[m.id]){m.id=uid((m.group||"m")+"-"+(m.label||""));}seen[m.id]=1;});
