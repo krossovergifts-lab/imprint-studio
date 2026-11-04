@@ -3,11 +3,19 @@ const path = require("path");
 
 /* ===========================================================================
    SET THIS to where your app is hosted.
-   - While developing (npm run dev in the krossover-studio folder): http://localhost:3000
-   - For the real installable app: your deployed URL, e.g. https://imprint.yourdomain.com
+   - While developing (npm run dev in the krossover-studio folder): http://localhost:3000/welcome.html
+   - For the real installable app: your deployed URL + /welcome.html
    You can also override without editing: set an IMPRINT_URL environment variable.
    =========================================================================== */
 const APP_URL = process.env.IMPRINT_URL || "https://imprint-studio-alpha.vercel.app/welcome.html";
+
+// Everything on the SAME SITE (same origin) stays inside the app window.
+// Only links to other websites open in the system browser.
+let APP_ORIGIN;
+try { APP_ORIGIN = new URL(APP_URL).origin; } catch (e) { APP_ORIGIN = APP_URL; }
+function sameSite(url) {
+  try { return new URL(url).origin === APP_ORIGIN; } catch (e) { return false; }
+}
 
 let win;
 
@@ -29,23 +37,25 @@ function createWindow() {
 
   win.loadURL(APP_URL).catch(() => showOffline());
 
-  // If the page fails to load (server down / wrong URL), show a friendly notice.
   win.webContents.on("did-fail-load", (_e, code, desc, url) => {
     if (code === -3) return; // aborted (normal on redirects)
     showOffline(desc, url);
   });
 
-  // Keep app navigation inside the window; open external links in the system browser.
+  // window.open / target="_blank" (e.g. the "Website ↗" link) → open in the real browser.
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith(APP_URL)) return { action: "allow" };
     shell.openExternal(url);
     return { action: "deny" };
   });
+
+  // Normal link clicks: keep same-site pages INSIDE the app; send other sites to the browser.
   win.webContents.on("will-navigate", (e, url) => {
-    if (!url.startsWith(APP_URL) && !url.startsWith("about:")) {
+    if (url.startsWith("about:") || url.startsWith("data:")) return;
+    if (!sameSite(url)) {
       e.preventDefault();
       shell.openExternal(url);
     }
+    // same-site → let it navigate in this window
   });
 }
 
@@ -60,8 +70,8 @@ function showOffline(desc, url) {
     button{margin-top:18px;padding:9px 18px;border:0;border-radius:8px;background:#2f6fed;color:#fff;font-weight:600;cursor:pointer}</style></head>
     <body><div class="b"><h1>Can't reach Imprint Studio</h1>
     <p>The app couldn't load <code>${(url || APP_URL)}</code>.</p>
-    <p>Start your app first (run <code>npm run dev</code> in the krossover-studio folder), or set the app URL to your live site in <code>main.js</code>.</p>
-    <button onclick="location.reload()">Try again</button></div></body></html>`);
+    <p>Check your internet connection, or set the app URL to your live site in <code>main.js</code>.</p>
+    <button onclick="location.href='${APP_URL}'">Try again</button></div></body></html>`);
   if (win) win.loadURL(html);
 }
 
@@ -89,7 +99,7 @@ function buildMenu() {
         click: () => dialog.showMessageBox(win, {
           type: "info", title: "Imprint Studio",
           message: "Imprint Studio — Desktop",
-          detail: "Admin app for preparing products for customization.\nLoading: " + APP_URL
+          detail: "Admin workspace for preparing products for customization.\nLoading: " + APP_URL
         })
       }]
     }
