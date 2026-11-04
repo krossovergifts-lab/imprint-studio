@@ -1,0 +1,35 @@
+name: Build Windows App
+
+# Run it manually from the Actions tab (click "Run workflow").
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: imprint-studio-desktop
+        run: npm install
+
+      - name: Build the .exe installer
+        working-directory: imprint-studio-desktop
+        run: npm run dist
+        env:
+          # unsigned build — skip code-signing discovery
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Imprint-Studio-Windows-Installer
+          path: imprint-studio-desktop/dist/*.exe
+          if-no-files-found: error

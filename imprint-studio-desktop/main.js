@@ -7,7 +7,7 @@ const path = require("path");
    - For the real installable app: your deployed URL, e.g. https://imprint.yourdomain.com
    You can also override without editing: set an IMPRINT_URL environment variable.
    =========================================================================== */
-const APP_URL = process.env.IMPRINT_URL || "http://localhost:3000";
+const APP_URL = process.env.IMPRINT_URL || "https://imprint-studio-alpha.vercel.app/welcome.html";
 
 let win;
 
