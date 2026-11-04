@@ -132,7 +132,7 @@ dialog::backdrop{background:rgba(8,18,34,.5)}
 
 <div class="wrap">
   <div class="top">
-    <div class="pinfo"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6a3 3 0 1 1 6 0c0 1.5-1.2 2.3-1.8 3.2-.4.6-.2 1.3.3 1.6l3.2 1.8c.6.3 1 .9 1 1.6V17H6v-1.8c0-.7.4-1.3 1-1.6l3.2-1.8c.5-.3.7-1 .3-1.6C9.2 8.3 9 7.5 9 6z"/><rect x="5" y="18" width="14" height="3" rx="1"/></svg></div><div><b id="pName">Loading…</b><span id="pMeta"></span></div></div>
+    <div class="pinfo"><div class="logo" id="koLogo"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6a3 3 0 1 1 6 0c0 1.5-1.2 2.3-1.8 3.2-.4.6-.2 1.3.3 1.6l3.2 1.8c.6.3 1 .9 1 1.6V17H6v-1.8c0-.7.4-1.3 1-1.6l3.2-1.8c.5-.3.7-1 .3-1.6C9.2 8.3 9 7.5 9 6z"/><rect x="5" y="18" width="14" height="3" rx="1"/></svg></div><div><b id="pName">Loading…</b><span id="pMeta"></span></div></div>
     <div class="actions">
       <button id="btnHelp" class="ghost help-btn" aria-label="Help" data-tip="<b>Need a hand?</b> Replay the quick tour of how to personalize this product.">?</button>
       <button id="btnClear" class="ghost" data-tip="<b>Clear this section</b> — remove all artwork from the section you're on. Other sections stay.">Clear this section</button>
@@ -571,6 +571,8 @@ function boot(){
   $("btnCart").onclick=addToCart;
   // Light theme only (store site has no dark mode)
   document.documentElement.setAttribute("data-theme","light");
+  // when opened standalone in the app (not embedded on a product page), the logo goes home
+  try{if(window.self===window.top){const lg=$("koLogo");if(lg){lg.style.cursor="pointer";lg.title="Home";lg.onclick=()=>{location.href="/welcome.html";};}}}catch(e){}
   // keep the product/parts centered on the artboard on every screen size
   const refit=()=>{const st=$("stage");if(!st||!canvas)return;const w=Math.max(280,Math.min(760,st.clientWidth-2));if(Math.abs(w-canvas.getWidth())<2)return;const h=Math.round(w*0.62);persistPart();canvas.setWidth(w);canvas.setHeight(h);buildPart();};
   let _rz;const onResize=()=>{clearTimeout(_rz);_rz=setTimeout(refit,160);};
