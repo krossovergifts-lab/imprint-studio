@@ -103,7 +103,7 @@ const defMethods=CAT_DEFAULTS[PROD.category]||["screen1","uvflat","uvdtf"];
 
 const $=id=>document.getElementById(id);
 const mm2px=(mm,dpi)=>Math.round(mm/25.4*dpi);
-function newPart(label){return {label:label||"Body",material:"metal",type:"flat",img:null,leftImg:null,rightImg:null,realW:80,realH:60,productH:200,dia:50,printH:80,dpi:300,safe:4,bandPos:0.55,methods:defMethods.slice(),area:null};}
+function newPart(label){return {label:label||"Body",material:"metal",type:"flat",img:null,leftImg:null,rightImg:null,realW:80,realH:60,productH:200,dia:50,printH:80,dpi:300,safe:4,bandPos:0.55,methods:defMethods.slice(),sizes:["S","M","L"],area:null};}
 const state={parts:[newPart("Body")],pi:0,productBase:PROD.price,vatPct:5,delivery:0,perElement:2};
 // load existing saved setup if present
 try{const all=JSON.parse(localStorage.getItem("ko_setup")||"{}");const s=all[PROD.sku];if(s&&s.parts&&s.parts.length){state.parts=s.parts;state.productBase=s.productBase??PROD.price;state.vatPct=s.vatPct??5;state.delivery=s.delivery??0;state.perElement=s.perElement??2;if(s.prices)METHODS.forEach(m=>{if(s.prices[m.id])m.price=s.prices[m.id];});}}catch(e){}
@@ -211,8 +211,10 @@ function renderInspector(){
     <div class="row"><div class="field"><label>DPI</label><input type="number" id="dDpi" value="${p.dpi}"></div><div class="field"><label>Safe margin</label><input type="number" id="dSafe" value="${p.safe}"></div></div>
     <h3>Allowed methods for this part</h3>
     <div class="mlist" id="mlist">${groupMethods().map(g=>`<div class="mgroup">${g.group}</div>`+g.items.map(m=>`<label><input type="checkbox" data-m="${m.id}" ${p.methods.includes(m.id)?"checked":""}> ${m.label}</label>`).join("")).join("")}</div>
+    <h3>Allowed print sizes for this part</h3>
+    <div class="mlist" id="szlist">${["S","M","L"].map(sz=>`<label><input type="checkbox" data-sz="${sz}" ${(p.sizes||["S","M","L"]).includes(sz)?"checked":""}> ${({S:"Small",M:"Medium",L:"Big"})[sz]}</label>`).join("")}</div>
     <div class="pricebox" id="partPrice"></div>
-    <div class="note">Each part can have a different material and its own allowed methods. Prices come from the global pricing settings — here you only choose which methods are possible for this product. The customer designs any part and pays the sum of printed parts.</div>`;
+    <div class="note">Each part can have a different material, its own allowed methods and sizes. Prices come from the global pricing settings — here you only choose which methods are possible for this product. The customer designs any part and pays the sum of printed parts.</div>`;
   $("plabel").onchange=e=>{p.label=e.target.value||p.label;renderTabs();};
   $("pmat").onchange=e=>{p.material=e.target.value;};
   $("ptype").onchange=e=>{p.type=e.target.value;p.area=null;build();};
@@ -227,10 +229,11 @@ function renderInspector(){
   $("dDpi").oninput=e=>{p.dpi=Math.max(72,+e.target.value||300);};
   $("dSafe").oninput=e=>{p.safe=Math.max(0,+e.target.value||0);};
   document.querySelectorAll("[data-m]").forEach(c=>c.onchange=e=>{const id=e.target.dataset.m;if(e.target.checked){if(!p.methods.includes(id))p.methods.push(id);}else p.methods=p.methods.filter(x=>x!==id);partPrice();});
+  document.querySelectorAll("[data-sz]").forEach(c=>c.onchange=e=>{const sz=e.target.dataset.sz;p.sizes=p.sizes||["S","M","L"];if(e.target.checked){if(!p.sizes.includes(sz))p.sizes.push(sz);}else p.sizes=p.sizes.filter(x=>x!==sz);if(!p.sizes.length){p.sizes=[sz];e.target.checked=true;}p.sizes=["S","M","L"].filter(x=>p.sizes.includes(x));partPrice();});
   partPrice();
 }
 function groupMethods(){const g=[];METHODS.forEach(m=>{let x=g.find(y=>y.group===m.group);if(!x){x={group:m.group,items:[]};g.push(x);}x.items.push(m);});return g;}
-function partPrice(){const p=cur(),box=$("partPrice");if(!box)return;const area=(pw()/10)*(ph()/10);box.innerHTML=`<b style="font-size:11px;color:var(--muted)">This part · ${pw()}×${ph()}mm (${area.toFixed(0)}cm²)</b><div class="hint" style="margin-top:3px">${p.methods.length} method${p.methods.length===1?"":"s"} allowed — priced from global settings.</div>`;}
+function partPrice(){const p=cur(),box=$("partPrice");if(!box)return;const area=(pw()/10)*(ph()/10);box.innerHTML=`<b style="font-size:11px;color:var(--muted)">This part · ${pw()}×${ph()}mm (${area.toFixed(0)}cm²)</b><div class="hint" style="margin-top:3px">${p.methods.length} method${p.methods.length===1?"":"s"} · ${(p.sizes||["S","M","L"]).length} size${(p.sizes||["S","M","L"]).length===1?"":"s"} — priced from global settings.</div>`;}
 function renderPriceEdit(){const box=$("priceEdit");if(!box)return;box.innerHTML=METHODS.map(m=>`<div class="priceedit"><b>${m.group} · ${m.label}</b><div class="row" style="flex-wrap:wrap;gap:6px">${Object.keys(m.price).map(k=>`<div style="flex:1;min-width:72px"><label style="font-size:10.5px;color:var(--muted)">${PLABEL[k]||k}</label><input type="number" step="0.01" data-pm="${m.id}" data-pk="${k}" value="${m.price[k]}" style="padding:5px 7px;font-size:12px"></div>`).join("")}</div></div>`).join("");box.querySelectorAll("[data-pm]").forEach(i=>i.onchange=e=>{const m=methodById(e.target.dataset.pm);if(m){m.price[e.target.dataset.pk]=+e.target.value||0;partPrice();}});}
 
 function reflowFlat(p){ // keep flat box centre & width, re-apply exact new aspect to height
@@ -240,7 +243,7 @@ function captureArea(){if(boundaryObj){cur().area={left:boundaryObj.left,top:bou
 function saveSetup(){
   captureArea();
   const cfg={sku:PROD.sku,name:PROD.name,multiArea:true,
-    parts:state.parts.map(p=>({label:p.label,material:p.material,type:p.type,realW:p.realW,realH:p.realH,productH:p.productH,dia:p.dia,printH:p.printH,dpi:p.dpi,safe:p.safe,bandPos:p.bandPos,methods:p.methods.slice(),hasImages:!!(p.img||p.leftImg),area:p.area})),
+    parts:state.parts.map(p=>({label:p.label,material:p.material,type:p.type,realW:p.realW,realH:p.realH,productH:p.productH,dia:p.dia,printH:p.printH,dpi:p.dpi,safe:p.safe,bandPos:p.bandPos,methods:p.methods.slice(),sizes:(p.sizes&&p.sizes.length)?["S","M","L"].filter(x=>p.sizes.includes(x)):["S","M","L"],hasImages:!!(p.img||p.leftImg),area:p.area})),
     prices:Object.fromEntries(METHODS.map(m=>[m.id,m.price])),
     productBase:state.productBase,vatPct:state.vatPct,delivery:state.delivery,perElement:state.perElement};
   try{const all=JSON.parse(localStorage.getItem("ko_setup")||"{}");all[PROD.sku]=cfg;localStorage.setItem("ko_setup",JSON.stringify(all));}catch(e){}
