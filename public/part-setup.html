@@ -78,18 +78,18 @@ input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script>
 const DEFAULT_METHODS=[
- {id:"screen1",group:"Screen Printing",label:"1 color",price:{setup:25,perUnit:3}},
- {id:"screen2",group:"Screen Printing",label:"2 color",price:{setup:40,perUnit:5}},
- {id:"screen3",group:"Screen Printing",label:"3+ colors",price:{setup:60,perUnit:8}},
- {id:"uvflat",group:"UV Printing (Flat Bed)",label:"Full color",price:{perUnit:6,perCm2:0.07}},
- {id:"uv360",group:"UV Printing (360 Rotary)",label:"Full color",price:{perUnit:8,perCm2:0.08}},
- {id:"uvdtf",group:"UV DTF Sticker",label:"Full color",price:{perUnit:5,perCm2:0.06}},
- {id:"dtf",group:"Heat Transfer (DTF)",label:"Full color",price:{perUnit:5,perCm2:0.05}},
- {id:"subl",group:"Sublimation",label:"Full color",price:{perUnit:5,perCm2:0.05}},
- {id:"laser",group:"Laser Engraving",label:"Mono",price:{setup:15,perUnit:4,perCm2:0.09}},
+ {id:"screen1",group:"Screen Printing",label:"1 color",color:"spot1",effect:"ink",setup:25,sizes:{S:2,M:3,L:4}},
+ {id:"screen2",group:"Screen Printing",label:"2 color",color:"spot2",effect:"ink",setup:40,sizes:{S:4,M:5,L:7}},
+ {id:"screen3",group:"Screen Printing",label:"3+ colors",color:"spot3",effect:"ink",setup:60,sizes:{S:6,M:8,L:11}},
+ {id:"uvflat",group:"UV Printing (Flat Bed)",label:"Full color",color:"full",effect:"uv",setup:0,sizes:{S:4,M:6,L:9}},
+ {id:"uv360",group:"UV Printing (360 Rotary)",label:"Full color",color:"full",effect:"uv",setup:0,sizes:{S:6,M:8,L:12}},
+ {id:"uvdtf",group:"UV DTF Sticker",label:"Full color",color:"full",effect:"uv",setup:0,sizes:{S:3,M:5,L:8}},
+ {id:"dtf",group:"Heat Transfer (DTF)",label:"Full color",color:"full",effect:"uv",setup:0,sizes:{S:3,M:5,L:8}},
+ {id:"subl",group:"Sublimation",label:"Full color",color:"full",effect:"uv",setup:0,sizes:{S:3,M:5,L:8}},
+ {id:"laser",group:"Laser Engraving",label:"Mono",color:"mono",effect:"engrave",setup:15,sizes:{S:3,M:4,L:6}},
 ];
-// methods come from the Pricing & Methods tool (ko_methods) so admin-added methods are assignable here too
-function loadMethods(){try{const s=localStorage.getItem("ko_methods");if(s){const a=JSON.parse(s);if(Array.isArray(a)&&a.length)return a;}}catch(e){}return DEFAULT_METHODS;}
+// methods + their S/M/L prices come from the Pricing & Methods tool (ko_methods)
+function loadMethods(){try{const s=localStorage.getItem("ko_methods");if(s){const a=JSON.parse(s);if(Array.isArray(a)&&a.length)return a.map(m=>({setup:0,sizes:{S:0,M:0,L:0},...m}));}}catch(e){}return DEFAULT_METHODS;}
 const METHODS=loadMethods();
 const methodById=id=>METHODS.find(m=>m.id===id);
 const MATERIALS=["metal","ceramic","glass","crystal","wood","cotton","leather","paper","stone","bamboo"];
@@ -210,11 +210,11 @@ function renderInspector(){
           <div class="hint" id="dimHint" style="margin:-2px 0 6px">Print ratio <b>${(p.realW/p.realH).toFixed(2)} : 1</b> · area <b>${((p.realW/10)*(p.realH/10)).toFixed(0)} cm²</b> — the on-screen box stays locked to this ratio.</div>`}
     <div class="row"><div class="field"><label>DPI</label><input type="number" id="dDpi" value="${p.dpi}"></div><div class="field"><label>Safe margin</label><input type="number" id="dSafe" value="${p.safe}"></div></div>
     <h3>Allowed methods for this part</h3>
-    <div class="mlist" id="mlist">${groupMethods().map(g=>`<div class="mgroup">${g.group}</div>`+g.items.map(m=>`<label><input type="checkbox" data-m="${m.id}" ${p.methods.includes(m.id)?"checked":""}> ${m.label}</label>`).join("")).join("")}</div>
+    <div class="mlist" id="mlist">${groupMethods().map(g=>`<div class="mgroup">${g.group}</div>`+g.items.map(m=>{const sz=m.sizes||{S:0,M:0,L:0};return `<label style="display:flex;align-items:center;gap:7px"><input type="checkbox" data-m="${m.id}" ${p.methods.includes(m.id)?"checked":""}><span>${m.label}</span><span style="margin-left:auto;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums" title="Small / Medium / Big per-piece price">S ${sz.S} · M ${sz.M} · L ${sz.L}</span></label>`;}).join("")).join("")}</div>
     <h3>Allowed print sizes for this part</h3>
     <div class="mlist" id="szlist">${["S","M","L"].map(sz=>`<label><input type="checkbox" data-sz="${sz}" ${(p.sizes||["S","M","L"]).includes(sz)?"checked":""}> ${({S:"Small",M:"Medium",L:"Big"})[sz]}</label>`).join("")}</div>
     <div class="pricebox" id="partPrice"></div>
-    <div class="note">Each part can have a different material, its own allowed methods and sizes. Prices come from the global pricing settings — here you only choose which methods are possible for this product. The customer designs any part and pays the sum of printed parts.</div>`;
+    <div class="note">Each method shows its <b>Small · Medium · Big</b> per-piece price from the global Pricing &amp; Methods tool. Here you only choose which methods this product allows — the customer then picks a method and a size, and pays the sum of printed parts.</div>`;
   $("plabel").onchange=e=>{p.label=e.target.value||p.label;renderTabs();};
   $("pmat").onchange=e=>{p.material=e.target.value;};
   $("ptype").onchange=e=>{p.type=e.target.value;p.area=null;build();};
